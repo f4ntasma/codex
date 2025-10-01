@@ -1,30 +1,39 @@
-# University project page
+# Hackaton Unix
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+Proyecto desarrollado para el Hackaton Unix
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/legnas-projects/v0-university-project-page)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/lpLRASJkFP7)
+## Descripción
 
-## Overview
+Este es un proyecto de hackathon desarrollado con Next.js y React.
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## Tecnologías utilizadas
 
-## Deployment
+- Next.js 14
+- React 18
+- TypeScript
+- Tailwind CSS
+- Radix UI
 
-Your project is live at:
+## Instalación
 
-**[https://vercel.com/legnas-projects/v0-university-project-page](https://vercel.com/legnas-projects/v0-university-project-page)**
+```bash
+npm install
+```
 
-## Build your app
+## Desarrollo
 
-Continue building your app on:
+```bash
+npm run dev
+```
 
-**[https://v0.app/chat/projects/lpLRASJkFP7](https://v0.app/chat/projects/lpLRASJkFP7)**
+## Construcción
 
-## How It Works
+```bash
+npm run build
+```
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+## Inicio
+
+```bash
+npm start
+```
