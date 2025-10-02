@@ -14,7 +14,7 @@ const allProjects = [
     authorAvatar: "/diverse-students-studying.png",
     tags: ["React", "Node.js", "MongoDB"],
     stars: 45,
-    image: "/academic-dashboard.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 2,
@@ -24,7 +24,7 @@ const allProjects = [
     authorAvatar: "/developer-working.png",
     tags: ["Unity", "C#", "ARCore"],
     stars: 67,
-    image: "/augmented-reality-app.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 3,
@@ -35,7 +35,7 @@ const allProjects = [
     authorAvatar: "/female-student.jpg",
     tags: ["Python", "TensorFlow", "NLP"],
     stars: 89,
-    image: "/ai-chatbot-interface.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 4,
@@ -45,7 +45,7 @@ const allProjects = [
     authorAvatar: "/male-student.jpg",
     tags: ["Next.js", "Stripe", "PostgreSQL"],
     stars: 52,
-    image: "/ecommerce-website.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 5,
@@ -56,7 +56,7 @@ const allProjects = [
     authorAvatar: "/tutor-session.png",
     tags: ["Vue.js", "WebRTC", "Firebase"],
     stars: 73,
-    image: "/tutoring-platform.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 6,
@@ -66,7 +66,7 @@ const allProjects = [
     authorAvatar: "/game-developer.jpg",
     tags: ["Phaser", "JavaScript", "Canvas"],
     stars: 41,
-    image: "/educational-math-game.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 7,
@@ -76,7 +76,7 @@ const allProjects = [
     authorAvatar: "/social-media-user.jpg",
     tags: ["React Native", "GraphQL", "AWS"],
     stars: 95,
-    image: "/social-network-app.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 8,
@@ -86,7 +86,7 @@ const allProjects = [
     authorAvatar: "/librarian.png",
     tags: ["Django", "Elasticsearch", "Docker"],
     stars: 58,
-    image: "/digital-library.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 9,
@@ -97,7 +97,7 @@ const allProjects = [
     authorAvatar: "/wellness-coach.jpg",
     tags: ["Flutter", "Dart", "Supabase"],
     stars: 82,
-    image: "/mental-health-app.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 10,
@@ -107,7 +107,7 @@ const allProjects = [
     authorAvatar: "/physics-student.jpg",
     tags: ["Three.js", "WebGL", "TypeScript"],
     stars: 64,
-    image: "/physics-simulator.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 11,
@@ -117,7 +117,7 @@ const allProjects = [
     authorAvatar: "/project-manager.jpg",
     tags: ["Svelte", "Socket.io", "Redis"],
     stars: 71,
-    image: "/project-management-board.jpg",
+    image: "/placeholder.svg",
   },
   {
     id: 12,
@@ -127,7 +127,7 @@ const allProjects = [
     authorAvatar: "/placeholder.svg?height=40&width=40",
     tags: ["OpenCV", "Python", "ML"],
     stars: 103,
-    image: "/placeholder.svg?height=300&width=400",
+    image: "/placeholder.svg",
   },
   {
     id: 13,

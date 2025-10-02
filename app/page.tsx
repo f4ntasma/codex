@@ -1,5 +1,5 @@
 import { Header } from "@/components/header"
-import { ProjectGrid } from "@/components/project-grid"
+import { ProjectGridDynamic } from "@/components/project-grid-dynamic"
 import { HeroSection } from "@/components/hero-section"
 
 export default function HomePage() {
@@ -8,7 +8,7 @@ export default function HomePage() {
       <Header />
       <main>
         <HeroSection />
-        <ProjectGrid limit={24} showViewMore={true} />
+        <ProjectGridDynamic limit={24} showViewMore={true} />
       </main>
     </div>
   )

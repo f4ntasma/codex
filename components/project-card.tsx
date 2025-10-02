@@ -1,26 +1,18 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Star, ExternalLink } from "lucide-react"
+import { Star, ExternalLink, Github, Eye } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-
-interface Project {
-  id: number
-  title: string
-  description: string
-  author: string
-  authorAvatar: string
-  tags: string[]
-  stars: number
-  image: string
-}
+import Link from "next/link"
+import type { Project } from '@/lib/supabase'
 
 interface ProjectCardProps {
   project: Project
+  onLike?: () => void
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, onLike }: ProjectCardProps) {
   return (
     <Card className="group hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border-border">
       <div className="relative h-48 overflow-hidden bg-muted">
@@ -53,20 +45,42 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <CardFooter className="pt-3 border-t border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={project.authorAvatar || "/placeholder.svg"} alt={project.author} />
+            <AvatarImage src={project.author_avatar || "/placeholder.svg"} alt={project.author} />
             <AvatarFallback>{project.author[0]}</AvatarFallback>
           </Avatar>
           <span className="text-sm text-foreground font-medium">{project.author}</span>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 text-muted-foreground">
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 gap-1 hover:bg-accent/50"
+            onClick={onLike}
+          >
             <Star className="h-4 w-4 fill-accent text-accent" />
             <span className="text-sm font-medium">{project.stars}</span>
-          </div>
-          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-            <ExternalLink className="h-4 w-4" />
           </Button>
+          
+          <div className="flex items-center gap-1">
+            {project.github_url && (
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+                <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
+                  <Github className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            {project.demo_url && (
+              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+                <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                  <Eye className="h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardFooter>
     </Card>

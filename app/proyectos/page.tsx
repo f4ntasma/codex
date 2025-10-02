@@ -1,5 +1,5 @@
 import { Header } from "@/components/header"
-import { ProjectGrid } from "@/components/project-grid"
+import { ProjectGridDynamic } from "@/components/project-grid-dynamic"
 
 export default function AllProjectsPage() {
   return (
@@ -12,7 +12,7 @@ export default function AllProjectsPage() {
             Explora todos los proyectos creados por estudiantes de nuestra universidad
           </p>
         </div>
-        <ProjectGrid limit={null} showViewMore={false} />
+        <ProjectGridDynamic limit={null} showViewMore={false} />
       </main>
     </div>
   )

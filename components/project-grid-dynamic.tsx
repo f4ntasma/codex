@@ -1,0 +1,207 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { ProjectCard } from "@/components/project-card"
+import { Button } from "@/components/ui/button"
+import { ArrowRight, Search, Filter, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { useSearchDebounce } from '@/lib/hooks/use-debounce'
+import { appConfig } from '@/lib/config'
+import type { Project } from '@/lib/supabase'
+
+interface ProjectGridDynamicProps {
+  limit: number | null
+  showViewMore: boolean
+  initialProjects?: Project[]
+}
+
+export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }: ProjectGridDynamicProps) {
+  const [projects, setProjects] = useState<Project[]>(initialProjects)
+  const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [showFeaturedOnly, setShowFeaturedOnly] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Usar debounce para la búsqueda para evitar demasiadas consultas
+  const { searchTerm: debouncedSearchTerm, shouldSearch, isSearching } = useSearchDebounce(
+    searchTerm, 
+    appConfig.search.minLength, 
+    appConfig.search.debounceMs
+  )
+
+  // Cargar proyectos desde la API con manejo mejorado de errores y estados
+  const loadProjects = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const params = new URLSearchParams()
+      if (limit) params.append('limit', limit.toString())
+      if (showFeaturedOnly) params.append('featured', 'true')
+      if (shouldSearch) params.append('search', debouncedSearchTerm)
+
+      const response = await fetch(`/api/projects?${params}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        // Manejar tanto el formato nuevo como el antiguo para compatibilidad
+        const projectsArray = data.projects || data
+        setProjects(Array.isArray(projectsArray) ? projectsArray : [])
+        setError(null)
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
+        setError(errorData.error || 'Error al cargar proyectos')
+        console.error('Error loading projects:', response.statusText, errorData)
+      }
+    } catch (error) {
+      const errorMessage = 'Error de conexión. Verifica tu conexión a internet.'
+      setError(errorMessage)
+      console.error('Error loading projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cargar proyectos al montar el componente o cuando cambien los filtros
+  useEffect(() => {
+    if (initialProjects.length === 0) {
+      loadProjects()
+    }
+  }, [debouncedSearchTerm, showFeaturedOnly, limit, shouldSearch])
+
+  // Dar like a un proyecto (ahora usando ruta pública)
+  const handleLike = async (projectId: number) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        // Actualizar el proyecto en el estado local
+        setProjects(prev => 
+          prev.map(p => p.id === projectId ? { ...p, stars: result.project.stars } : p)
+        )
+        
+        // Opcional: mostrar mensaje de éxito
+        console.log(result.message)
+      } else {
+        const errorData = await response.json()
+        console.error('Error al dar like:', errorData.error)
+      }
+    } catch (error) {
+      console.error('Error updating likes:', error)
+    }
+  }
+
+  const displayedProjects = projects
+
+  return (
+    <section className="container mx-auto px-4 py-12">
+      <div className="mb-8">
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          {limit ? "Proyectos Destacados" : "Todos los Proyectos"}
+        </h2>
+        <p className="text-muted-foreground mb-6">
+          {limit
+            ? "Descubre los proyectos más populares de nuestra comunidad"
+            : `${projects.length} proyectos disponibles`}
+        </p>
+
+        {/* Filtros y búsqueda con indicadores de estado */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary animate-spin" />
+            )}
+            <input
+              type="text"
+              placeholder={`Buscar proyectos (mín. ${appConfig.search.minLength} caracteres)...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 border border-border rounded-md bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+          </div>
+          <Button
+            variant={showFeaturedOnly ? "default" : "outline"}
+            onClick={() => setShowFeaturedOnly(!showFeaturedOnly)}
+            className="gap-2"
+            disabled={loading}
+          >
+            <Filter className="h-4 w-4" />
+            {showFeaturedOnly ? "Todos" : "Destacados"}
+          </Button>
+        </div>
+
+        {/* Mostrar error si existe */}
+        {error && (
+          <div className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+            <p className="text-destructive text-sm font-medium">⚠️ {error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadProjects}
+              className="mt-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Reintentando...
+                </>
+              ) : (
+                'Reintentar'
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: limit || 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-muted rounded-lg h-64 mb-4"></div>
+              <div className="bg-muted rounded h-4 mb-2"></div>
+              <div className="bg-muted rounded h-3 mb-2"></div>
+              <div className="bg-muted rounded h-3 w-2/3"></div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {displayedProjects.map((project) => (
+            <ProjectCard 
+              key={project.id} 
+              project={project} 
+              onLike={() => handleLike(project.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {displayedProjects.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">
+            No se encontraron proyectos que coincidan con tu búsqueda.
+          </p>
+        </div>
+      )}
+
+      {showViewMore && !searchTerm && (
+        <div className="mt-12 text-center">
+          <Link href="/proyectos">
+            <Button size="lg" variant="outline" className="gap-2 bg-transparent">
+              Ver Todos los Proyectos
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
+      )}
+    </section>
+  )
+}

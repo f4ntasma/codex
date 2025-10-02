@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Code2, Upload } from "lucide-react"
 
@@ -7,8 +8,13 @@ export function Header() {
     <header className="border-b border-border bg-card sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Code2 className="h-6 w-6 text-primary" />
-          <span className="font-bold text-xl text-foreground">UniProjects</span>
+          <Image 
+            src="/blacklog.jpg" 
+            alt="UniProjects Logo" 
+            width={250} 
+            height={100}
+            className="h-8 w-20"
+          />
         </Link>
 
         <nav className="hidden md:flex items-center gap-6">
@@ -30,10 +36,12 @@ export function Header() {
           <Button variant="ghost" size="sm">
             Iniciar Sesión
           </Button>
-          <Button size="sm" className="gap-2">
-            <Upload className="h-4 w-4" />
-            Subir Proyecto
-          </Button>
+          <Link href="/subir-proyecto">
+            <Button size="sm" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Subir Proyecto
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

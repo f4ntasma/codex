@@ -5,9 +5,14 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Hackaton Unix',
-  description: 'Proyecto de Hackaton Unix',
+  title: 'Hackaton Unix - Proyectos Estudiantiles',
+  description: 'Plataforma de proyectos estudiantiles universitarios - Descubre, comparte y colabora en proyectos innovadores',
   generator: 'Next.js',
+  icons: {
+    icon: '/logitoutp.png',
+    shortcut: '/logitoutp.png',
+    apple: '/logitoutp.png',
+  },
 }
 
 export default function RootLayout({
