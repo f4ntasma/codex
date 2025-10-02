@@ -1,5 +1,6 @@
 import { Header } from "@/components/header"
 import { ProjectGridDynamic } from "@/components/project-grid-dynamic"
+import { AdminPanel } from "@/components/admin-panel"
 
 export default function AllProjectsPage() {
   return (

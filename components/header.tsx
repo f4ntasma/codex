@@ -11,7 +11,7 @@ export function Header() {
           <Image 
             src="/blacklog.jpg" 
             alt="UniProjects Logo" 
-            width={250} 
+            width={150} 
             height={100}
             className="xD"
           />
@@ -22,9 +22,9 @@ export function Header() {
             Inicio
           </Link>
           <Link href="/proyectos" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Proyectos
+            Intercorp
           </Link>
-          <Link href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+          <Link href="/students" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Estudiantes
           </Link>
         </nav>

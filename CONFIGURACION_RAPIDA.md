@@ -1,6 +1,6 @@
-# ⚡ CONFIGURACIÓN RÁPIDA - UniProjects
+# CONFIGURACIÓN RÁPIDA - UniProjects
 
-## 🚨 PASO 1: Crear la Base de Datos (URGENTE)
+## PASO 1: Crear la Base de Datos (URGENTE)
 
 El error que ves es porque falta crear la tabla en Supabase. **Hazlo AHORA**:
 
@@ -48,16 +48,16 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## 🎯 FUNCIONALIDADES IMPLEMENTADAS
+## FUNCIONALIDADES IMPLEMENTADAS
 
-### ✅ **Para Usuarios Normales (SIN AUTENTICACIÓN):**
+### **Para Usuarios Normales (SIN AUTENTICACIÓN):**
 - **Ver todos los proyectos** - Acceso libre
 - **Buscar proyectos** - Sin restricciones
 - **Dar likes** - Cualquiera puede dar like
 - **Subir proyectos** - Formulario público en `/subir-proyecto`
 - **Ver detalles** - Acceso completo a información
 
-### ✅ **Para Administradores (CON AUTENTICACIÓN):**
+### **Para Administradores (CON AUTENTICACIÓN):**
 - **Panel admin** - Solo en `/admin` con token
 - **Editar proyectos** - CRUD completo
 - **Eliminar proyectos** - Solo admins
@@ -66,7 +66,7 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## 🔑 ACCESO AL PANEL ADMIN
+## ACCESO AL PANEL ADMIN
 
 ### Para acceder como admin:
 1. Ve a: `http://localhost:3000/admin`
@@ -77,7 +77,7 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## 🚀 NUEVAS PÁGINAS CREADAS
+## NUEVAS PÁGINAS CREADAS
 
 ### `/subir-proyecto` - Formulario Público
 - **Cualquiera puede subir proyectos**
@@ -93,22 +93,22 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## 🔧 CAMBIOS EN SEGURIDAD
+## CAMBIOS EN SEGURIDAD
 
-### ✅ **Rutas Públicas (SIN AUTENTICACIÓN):**
+### **Rutas Públicas (SIN AUTENTICACIÓN):**
 - `GET /api/projects` - Ver proyectos
 - `GET /api/projects/[id]` - Ver proyecto individual
 - `POST /api/projects` - Subir proyecto
 - `POST /api/projects/[id]/like` - Dar like
 
-### 🔒 **Rutas Protegidas (SOLO ADMINS):**
+### **Rutas Protegidas (SOLO ADMINS):**
 - `PUT /api/projects/[id]` - Editar proyecto
 - `DELETE /api/projects/[id]` - Eliminar proyecto
 - `/admin` - Panel de administración
 
 ---
 
-## 🎨 MEJORAS EN UI
+## MEJORAS EN UI
 
 ### Header Actualizado:
 - **Botón "Subir Proyecto"** funcional
@@ -128,7 +128,7 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## 📱 CÓMO USAR TODO
+## CÓMO USAR TODO
 
 ### Como Usuario Normal:
 1. **Explorar**: Ve a la página principal
@@ -144,21 +144,21 @@ CREATE POLICY "Anyone can insert projects" ON public.projects FOR INSERT WITH CH
 
 ---
 
-## ✅ ESTADO ACTUAL
+## ESTADO ACTUAL
 
-**🎉 TODO FUNCIONA CORRECTAMENTE**
+**TODO FUNCIONA CORRECTAMENTE**
 
 Solo necesitas:
 1. **Ejecutar el SQL en Supabase** (paso 1)
 2. **¡Disfrutar la aplicación completa!**
 
 La aplicación ahora tiene:
-- ✅ Backend completo sin restricciones para usuarios
-- ✅ Panel admin protegido
-- ✅ Formulario público para subir proyectos
-- ✅ Sistema de likes funcional
-- ✅ Búsqueda y filtros
-- ✅ Logos implementados
-- ✅ Interfaz moderna y responsive
+- Backend completo sin restricciones para usuarios
+- Panel admin protegido
+- Formulario público para subir proyectos
+- Sistema de likes funcional
+- Búsqueda y filtros
+- Logos implementados
+- Interfaz moderna y responsive
 
-**¡Está lista para usar! 🚀**
+**¡Está lista para usar! **
