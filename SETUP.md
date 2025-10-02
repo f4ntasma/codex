@@ -1,14 +1,14 @@
-# 🚀 Guía de Configuración - UniProjects
+# Guía de Configuración - UniProjects
 
 Esta guía te ayudará a configurar completamente el proyecto UniProjects con todas las funcionalidades implementadas.
 
-## 📋 Requisitos Previos
+## Requisitos Previos
 
 - Node.js 18+ instalado
 - Cuenta de Supabase configurada
 - Editor de código (VS Code recomendado)
 
-## 🔧 Configuración Paso a Paso
+## Configuración Paso a Paso
 
 ### 1. Variables de Entorno
 
@@ -37,11 +37,11 @@ NEXTAUTH_URL="http://localhost:3000"
 4. Ejecuta el contenido del archivo `lib/database.sql`
 
 Esto creará:
-- ✅ Tabla `projects` con todos los campos necesarios
-- ✅ Índices para optimización
-- ✅ Row Level Security (RLS)
-- ✅ Función de búsqueda de texto completo
-- ✅ Datos de ejemplo
+- Tabla `projects` con todos los campos necesarios
+- Índices para optimización
+- Row Level Security (RLS)
+- Función de búsqueda de texto completo
+- Datos de ejemplo
 
 ### 3. Instalación de Dependencias
 
