@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-middleware'
 import type { ProjectUpdate } from '@/lib/supabase'
 
-// GET - Obtener proyecto por ID (PÚBLICO - cualquiera puede ver)
+// GET - Obtener proyecto por ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -24,7 +24,7 @@ export async function GET(
       }
       console.error('Error fetching project:', error)
       return NextResponse.json(
-        { error: 'Error al obtener proyecto' },
+        { error: 'Error al cargar proyecto' },
         { status: 500 }
       )
     }
@@ -33,7 +33,7 @@ export async function GET(
   } catch (error) {
     console.error('Unexpected error:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error internal server' },
       { status: 500 }
     )
   }
@@ -94,13 +94,13 @@ export async function PUT(
   }
 }
 
-// DELETE - Eliminar proyecto (SIN AUTENTICACIÓN - acceso libre)
+// DELETE - Eliminar proyecto (SIN AUTENTICACIÓN!!!- acceso libre)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Sin verificación de autenticación - acceso libre
+    // Sin verificación de autenticación por ahora - acceso libre
 
     const { error } = await supabaseAdmin
       .from('projects')

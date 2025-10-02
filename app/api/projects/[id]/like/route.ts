@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
-// POST - Dar like a un proyecto (PÚBLICO - cualquiera puede dar like)
+// POST -> Dar like a un proyecto
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Primero obtener el proyecto actual
     const { data: project, error: fetchError } = await supabaseAdmin
       .from('projects')
       .select('id, stars, title')
@@ -52,13 +51,13 @@ export async function POST(
     return NextResponse.json({
       success: true,
       project: data,
-      message: '¡Gracias por tu like!',
+      message: '¡Gracias por tu like perra!',
       timestamp: new Date().toISOString()
     })
   } catch (error) {
     console.error('Unexpected error in like route:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Internal error server' },
       { status: 500 }
     )
   }

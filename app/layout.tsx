@@ -5,8 +5,8 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Hackaton Unix - Proyectos Estudiantiles',
-  description: 'Plataforma de proyectos estudiantiles universitarios - Descubre, comparte y colabora en proyectos innovadores',
+  title: 'Hackaton Waza',
+  description: 'El WAZAAAAAAAAAA',
   generator: 'Next.js',
   icons: {
     icon: '/logitoutp.png',

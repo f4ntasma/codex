@@ -7,13 +7,13 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link href="/" className="flex items-center gap-5 hover:opacity-80 transition-opacity">
           <Image 
             src="/blacklog.jpg" 
             alt="UniProjects Logo" 
             width={250} 
             height={100}
-            className="h-8 w-20"
+            className="xD"
           />
         </Link>
 
@@ -26,9 +26,6 @@ export function Header() {
           </Link>
           <Link href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Estudiantes
-          </Link>
-          <Link href="#" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Acerca de
           </Link>
         </nav>
 
