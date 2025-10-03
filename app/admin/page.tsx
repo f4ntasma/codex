@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { AdminGuard } from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,16 +16,33 @@ import {
   Users, 
   TrendingUp,
   Shield,
-  Search
+  Search,
+  BarChart3,
+  Activity,
+  FileText,
+  Settings,
+  Download,
+  Upload,
+  Filter,
+  Calendar,
+  Mail,
+  Bell
 } from "lucide-react"
 import type { Project } from '@/lib/supabase'
 
-export default function AdminPanel() {
+function AdminPanelContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [activeTab, setActiveTab] = useState('projects')
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    totalViews: 0,
+    totalUsers: 0,
+    pendingHires: 0
+  })
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -61,7 +79,23 @@ export default function AdminPanel() {
 
   useEffect(() => {
     loadProjects()
+    loadStats()
   }, [])
+
+  // Cargar estadísticas del sistema
+  const loadStats = async () => {
+    try {
+      // Simular estadísticas (en producción vendrían de la API)
+      setStats({
+        totalProjects: projects.length,
+        totalViews: Math.floor(Math.random() * 1000) + 500,
+        totalUsers: Math.floor(Math.random() * 200) + 100,
+        pendingHires: Math.floor(Math.random() * 20) + 5
+      })
+    } catch (error) {
+      console.error('Error loading stats:', error)
+    }
+  }
 
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
@@ -154,7 +188,7 @@ export default function AdminPanel() {
   )
 
   // Estadísticas
-  const stats = {
+  const projectStats = {
     total: projects.length,
     published: projects.filter(p => p.status === 'published').length,
     featured: projects.filter(p => p.featured).length,
@@ -196,7 +230,7 @@ export default function AdminPanel() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
+              <div className="text-2xl font-bold">{projectStats.total}</div>
             </CardContent>
           </Card>
           <Card>
@@ -205,7 +239,7 @@ export default function AdminPanel() {
               <Eye className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.published}</div>
+              <div className="text-2xl font-bold">{projectStats.published}</div>
             </CardContent>
           </Card>
           <Card>
@@ -214,7 +248,7 @@ export default function AdminPanel() {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.featured}</div>
+              <div className="text-2xl font-bold">{projectStats.featured}</div>
             </CardContent>
           </Card>
           <Card>
@@ -223,12 +257,38 @@ export default function AdminPanel() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalStars}</div>
+              <div className="text-2xl font-bold">{projectStats.totalStars}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Formulario de creación/edición */}
+        {/* Navegación por pestañas */}
+        <div className="mb-6">
+          <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
+            {[
+              { id: 'projects', label: 'Proyectos', icon: <FileText className="h-4 w-4" /> },
+              { id: 'analytics', label: 'Analíticas', icon: <BarChart3 className="h-4 w-4" /> },
+              { id: 'users', label: 'Usuarios', icon: <Users className="h-4 w-4" /> },
+              { id: 'settings', label: 'Configuración', icon: <Settings className="h-4 w-4" /> }
+            ].map((tab) => (
+              <Button
+                key={tab.id}
+                variant={activeTab === tab.id ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveTab(tab.id)}
+                className="gap-2"
+              >
+                {tab.icon}
+                {tab.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Contenido de las pestañas */}
+        {activeTab === 'projects' && (
+          <>
+            {/* Formulario de creación/edición */}
         {showCreateForm && (
           <Card className="mb-8">
             <CardHeader>
@@ -395,7 +455,18 @@ export default function AdminPanel() {
             </div>
           </CardContent>
         </Card>
+          </>
+        )}
+        </div>
       </div>
     </div>
+  )
+}
+
+export default function AdminPanel() {
+  return (
+    <AdminGuard>
+      <AdminPanelContent />
+    </AdminGuard>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Header } from "@/components/header"
+import { StudentGuard } from "@/components/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -35,7 +36,7 @@ interface Student {
   projects_count: number
 }
 
-export default function StudentsPage() {
+function StudentsPageContent() {
   const [students, setStudents] = useState<Student[]>([])
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -361,5 +362,13 @@ export default function StudentsPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function StudentsPage() {
+  return (
+    <StudentGuard>
+      <StudentsPageContent />
+    </StudentGuard>
   )
 }

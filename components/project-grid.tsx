@@ -1,7 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import { ProjectCard } from "@/components/project-card"
+import { ProjectModal } from "@/components/project-modal"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
+import type { Project } from '@/lib/supabase'
 
 // Datos de ejemplo - en producción vendrían de una base de datos
 const allProjects = [
@@ -318,7 +323,21 @@ interface ProjectGridProps {
 }
 
 export function ProjectGrid({ limit, showViewMore }: ProjectGridProps) {
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  
   const displayedProjects = limit ? allProjects.slice(0, limit) : allProjects
+
+  // Manejar apertura del modal
+  const handleOpenModal = (project: Project) => {
+    setSelectedProject(project)
+    setIsModalOpen(true)
+  }
+
+  // Manejar cierre del modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+  }
 
   return (
     <section className="container mx-auto px-4 py-12">
@@ -335,7 +354,11 @@ export function ProjectGrid({ limit, showViewMore }: ProjectGridProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {displayedProjects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+          <ProjectCard 
+            key={project.id} 
+            project={project} 
+            onOpenModal={handleOpenModal}
+          />
         ))}
       </div>
 
@@ -349,6 +372,13 @@ export function ProjectGrid({ limit, showViewMore }: ProjectGridProps) {
           </Link>
         </div>
       )}
+
+      {/* Modal de proyecto */}
+      <ProjectModal
+        project={selectedProject}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </section>
   )
 }

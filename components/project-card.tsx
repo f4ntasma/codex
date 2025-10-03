@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -10,11 +11,21 @@ import type { Project } from '@/lib/supabase'
 interface ProjectCardProps {
   project: Project
   onLike?: () => void
+  onOpenModal?: (project: Project) => void
 }
 
-export function ProjectCard({ project, onLike }: ProjectCardProps) {
+export const ProjectCard = memo(function ProjectCard({ project, onLike, onOpenModal }: ProjectCardProps) {
+  const handleCardClick = () => {
+    if (onOpenModal) {
+      onOpenModal(project)
+    }
+  }
+
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border-border">
+    <Card 
+      className="group hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border-border cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="relative h-48 overflow-hidden bg-muted">
         <Image
           src={project.image || "/placeholder.svg"}
@@ -56,7 +67,10 @@ export function ProjectCard({ project, onLike }: ProjectCardProps) {
             size="sm"
             variant="ghost"
             className="h-8 px-2 gap-1 hover:bg-accent/50"
-            onClick={onLike}
+            onClick={(e) => {
+              e.stopPropagation()
+              onLike?.()
+            }}
           >
             <Star className="h-4 w-4 fill-accent text-accent" />
             <span className="text-sm font-medium">{project.stars}</span>
@@ -64,25 +78,34 @@ export function ProjectCard({ project, onLike }: ProjectCardProps) {
           
           <div className="flex items-center gap-1">
             {project.github_url && (
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 w-8 p-0" 
+                onClick={(e) => e.stopPropagation()}
+                asChild
+              >
                 <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
                   <Github className="h-4 w-4" />
                 </Link>
               </Button>
             )}
             {project.demo_url && (
-              <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 w-8 p-0" 
+                onClick={(e) => e.stopPropagation()}
+                asChild
+              >
                 <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
                   <Eye className="h-4 w-4" />
                 </Link>
               </Button>
             )}
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-              <ExternalLink className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </CardFooter>
     </Card>
   )
-}
+})

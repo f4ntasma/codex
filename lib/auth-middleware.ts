@@ -1,117 +1,98 @@
-// Middleware de autenticación simple para el panel de administración
-// Este archivo maneja la verificación de tokens de acceso para rutas protegidas
+import { NextRequest, NextResponse } from 'next/server'
+import { getUserFromRequest, authConfig, User } from './auth'
 
-import { NextRequest } from 'next/server'
-import { securityConfig } from './config'
-
-// Interfaz para el usuario autenticado
-export interface AuthUser {
-  id: string
-  email: string
-  role: 'admin' | 'user'
-  name?: string
-}
-
-// Función para verificar si un token es válido
-export function verifyAuthToken(token: string): AuthUser | null {
-  try {
-    // En desarrollo, usar un token simple
-    // En producción, esto debería usar JWT o Auth0
-    if (token === securityConfig.adminToken) {
-      return {
-        id: 'admin-1',
-        email: 'admin@uniprojects.com',
-        role: 'admin',
-        name: 'Administrador'
-      }
-    }
-    
-    // Aquí podrías agregar verificación JWT real
-    // const decoded = jwt.verify(token, process.env.JWT_SECRET)
-    // return decoded as AuthUser
-    
-    return null
-  } catch (error) {
-    console.error('Error verificando token:', error)
-    return null
-  }
-}
-
-// Función para extraer el token de autorización de la request
-export function extractAuthToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization')
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null
-  }
-  
-  return authHeader.substring(7) // Remover "Bearer "
-}
-
-// Función para verificar si el usuario tiene permisos de administrador
-export function isAdmin(user: AuthUser | null): boolean {
-  return user?.role === 'admin'
-}
-
-// Función para crear un token de respuesta de error de autenticación
-export function createAuthErrorResponse(message: string = 'No autorizado', status: number = 401) {
-  return new Response(
-    JSON.stringify({ 
-      error: message,
-      code: 'UNAUTHORIZED',
-      timestamp: new Date().toISOString()
-    }),
-    { 
-      status,
-      headers: {
-        'Content-Type': 'application/json',
-        'WWW-Authenticate': 'Bearer'
-      }
-    }
-  )
-}
-
-// Middleware para proteger rutas API que requieren autenticación
-export function requireAuth(request: NextRequest): AuthUser | Response {
-  const token = extractAuthToken(request)
-  
-  if (!token) {
-    return createAuthErrorResponse('Token de autorización requerido')
-  }
-  
-  const user = verifyAuthToken(token)
+export function requireAuth(request: NextRequest): User | null {
+  const user = getUserFromRequest(request)
   
   if (!user) {
-    return createAuthErrorResponse('Token inválido o expirado')
+    return null
   }
   
   return user
 }
 
-// Middleware para proteger rutas que requieren permisos de administrador
-export function requireAdmin(request: NextRequest): AuthUser | Response {
-  const authResult = requireAuth(request)
+export function requireRole(request: NextRequest, allowedRoles: User['role'][]): User | null {
+  const user = requireAuth(request)
   
-  if (authResult instanceof Response) {
-    return authResult // Error de autenticación
+  if (!user || !allowedRoles.includes(user.role)) {
+    return null
   }
   
-  if (!isAdmin(authResult)) {
-    return createAuthErrorResponse('Se requieren permisos de administrador', 403)
-  }
-  
-  return authResult
+  return user
 }
 
-// Función para generar un token temporal (solo para desarrollo)
-export function generateTempToken(user: Partial<AuthUser>): string {
-  // En producción, usar JWT real
-  // return jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '24h' })
-  
-  // Para desarrollo, retornar el token simple
-  if (user.role === 'admin') {
-    return securityConfig.adminToken
+export function requireStudent(request: NextRequest): User | null {
+  return requireRole(request, ['student', 'admin'])
+}
+
+export function requireCorporate(request: NextRequest): User | null {
+  return requireRole(request, ['corporate', 'admin'])
+}
+
+export function requireAdmin(request: NextRequest): User | null {
+  return requireRole(request, ['admin'])
+}
+
+export function withAuth(handler: (request: NextRequest, user: User) => Promise<NextResponse>) {
+  return async (request: NextRequest) => {
+    const user = requireAuth(request)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No autorizado', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      )
+    }
+    
+    return handler(request, user)
   }
+}
+
+export function withRole(
+  allowedRoles: User['role'][],
+  handler: (request: NextRequest, user: User) => Promise<NextResponse>
+) {
+  return async (request: NextRequest) => {
+    const user = requireRole(request, allowedRoles)
+    
+    if (!user) {
+      return NextResponse.json(
+        { error: 'No tienes permisos para acceder a este recurso', code: 'FORBIDDEN' },
+        { status: 403 }
+      )
+    }
+    
+    return handler(request, user)
+  }
+}
+
+export function createAuthResponse(user: User, token: string) {
+  const response = NextResponse.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar
+    },
+    message: 'Autenticación exitosa'
+  })
+
+  // Set HTTP-only cookie
+  response.cookies.set(authConfig.cookieName, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  })
+
+  return response
+}
+
+export function createLogoutResponse() {
+  const response = NextResponse.json({ message: 'Sesión cerrada exitosamente' })
   
-  return 'user-token-' + Date.now()
+  response.cookies.delete(authConfig.cookieName)
+  
+  return response
 }

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { ProjectCard } from "@/components/project-card"
+import { ProjectModal } from "@/components/project-modal"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Search, Filter, Loader2 } from "lucide-react"
 import Link from "next/link"
@@ -21,6 +22,9 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
   const [searchTerm, setSearchTerm] = useState('')
   const [showFeaturedOnly, setShowFeaturedOnly] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [user, setUser] = useState<any>(null)
   
   // Usar debounce para la búsqueda para evitar demasiadas consultas
   const { searchTerm: debouncedSearchTerm, shouldSearch, isSearching } = useSearchDebounce(
@@ -30,7 +34,7 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
   )
 
   // Cargar proyectos desde la API con manejo mejorado de errores y estados
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     setLoading(true)
     setError(null)
     
@@ -60,17 +64,34 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     } finally {
       setLoading(false)
     }
-  }
+  }, [limit, showFeaturedOnly, debouncedSearchTerm, shouldSearch])
 
   // Cargar proyectos al montar el componente o cuando cambien los filtros
   useEffect(() => {
     if (initialProjects.length === 0) {
       loadProjects()
     }
-  }, [debouncedSearchTerm, showFeaturedOnly, limit, shouldSearch])
+  }, [loadProjects, initialProjects.length])
+
+  // Obtener información del usuario
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch('/api/auth/me')
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+        }
+      } catch (error) {
+        console.error('Error fetching user:', error)
+      }
+    }
+    
+    fetchUser()
+  }, [])
 
   // Dar like a un proyecto (ahora usando ruta pública)
-  const handleLike = async (projectId: number) => {
+  const handleLike = useCallback(async (projectId: number) => {
     try {
       const response = await fetch(`/api/projects/${projectId}/like`, {
         method: 'POST',
@@ -86,6 +107,11 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
           prev.map(p => p.id === projectId ? { ...p, stars: result.project.stars } : p)
         )
         
+        // Actualizar también el proyecto seleccionado si es el mismo
+        if (selectedProject && selectedProject.id === projectId) {
+          setSelectedProject({ ...selectedProject, stars: result.project.stars })
+        }
+        
         // Opcional: mostrar mensaje de éxito
         console.log(result.message)
       } else {
@@ -95,9 +121,44 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     } catch (error) {
       console.error('Error updating likes:', error)
     }
-  }
+  }, [selectedProject])
 
-  const displayedProjects = projects
+  // Manejar apertura del modal
+  const handleOpenModal = useCallback((project: Project) => {
+    setSelectedProject(project)
+    setIsModalOpen(true)
+  }, [])
+
+  // Manejar cierre del modal
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false)
+    // Mantener el proyecto seleccionado para que se pueda reabrir rápidamente
+  }, [])
+
+  // Manejar contratación
+  const handleHire = useCallback(async (projectId: number) => {
+    try {
+      const response = await fetch(`/api/projects/${projectId}/hire`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        alert(`¡Solicitud de contratación enviada! ${result.message}`)
+      } else {
+        const errorData = await response.json()
+        alert(`Error: ${errorData.error}`)
+      }
+    } catch (error) {
+      console.error('Error hiring student:', error)
+      alert('Error al enviar la solicitud de contratación')
+    }
+  }, [])
+
+  const displayedProjects = useMemo(() => projects, [projects])
 
   return (
     <section className="container mx-auto px-4 py-12">
@@ -179,6 +240,7 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
               key={project.id} 
               project={project} 
               onLike={() => handleLike(project.id)}
+              onOpenModal={handleOpenModal}
             />
           ))}
         </div>
@@ -202,6 +264,16 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
           </Link>
         </div>
       )}
+
+      {/* Modal de proyecto */}
+      <ProjectModal
+        project={selectedProject}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onLike={handleLike}
+        userRole={user?.role}
+        onHire={handleHire}
+      />
     </section>
   )
 }
