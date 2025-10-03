@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Star, ExternalLink, Github, Eye, X, Minimize2, Maximize2, Calendar, User, Users, Briefcase } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
 import { ProjectViewers } from "@/components/project-viewers"
@@ -24,6 +25,9 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
   const [isMinimized, setIsMinimized] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showViewers, setShowViewers] = useState(false)
+  const [comments, setComments] = useState<{ id: number; project_id: number; author: string | null; content: string; created_at: string }[]>([])
+  const [newComment, setNewComment] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleLike = () => {
     if (onLike && project) {
@@ -60,6 +64,11 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
         }).catch(error => {
           console.error('Error tracking project view:', error)
         })
+
+        fetch(`/api/projects/${project.id}/comments`)
+          .then(res => res.json())
+          .then((data) => setComments(Array.isArray(data?.comments) ? data.comments : []))
+          .catch(() => setComments([]))
       }
     }
   }, [isOpen, project?.id])
@@ -236,6 +245,55 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold text-foreground">Comentarios</h3>
+                <div className="space-y-3">
+                  {comments.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Sé el primero en comentar.</p>
+                  )}
+                  {comments.map((c) => (
+                    <div key={c.id} className="border border-border rounded-md p-3">
+                      <div className="text-sm text-foreground whitespace-pre-wrap">{c.content}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {c.author ? c.author : 'Anónimo'} • {formatDate(c.created_at)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault()
+                    if (!project?.id || !newComment.trim()) return
+                    setIsSubmitting(true)
+                    try {
+                      const res = await fetch(`/api/projects/${project.id}/comments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: newComment })
+                      })
+                      const data = await res.json()
+                      if (res.ok && data?.comment) {
+                        setComments((prev) => [...prev, data.comment])
+                        setNewComment("")
+                      }
+                    } finally {
+                      setIsSubmitting(false)
+                    }
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Input
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Escribe un comentario..."
+                  />
+                  <Button type="submit" size="sm" disabled={isSubmitting || !newComment.trim()}>
+                    Enviar
+                  </Button>
+                </form>
               </div>
             </CardContent>
           )}

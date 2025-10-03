@@ -75,3 +75,19 @@ CREATE POLICY "Allow all operations for everyone" ON public.projects
 -- Mensaje de confirmación
 SELECT 'Tabla projects creada exitosamente con ' || COUNT(*) || ' proyectos de ejemplo' as resultado
 FROM public.projects;
+
+-- Tabla de comentarios de proyectos
+CREATE TABLE IF NOT EXISTS public.project_comments (
+  id SERIAL PRIMARY KEY,
+  project_id INTEGER NOT NULL REFERENCES public.projects(id) ON DELETE CASCADE,
+  author VARCHAR(255),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_comments_project_id_created_at
+  ON public.project_comments(project_id, created_at);
+
+ALTER TABLE public.project_comments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can read comments" ON public.project_comments FOR SELECT USING (true);
+CREATE POLICY "Anyone can insert comments" ON public.project_comments FOR INSERT WITH CHECK (true);
