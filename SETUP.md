@@ -137,7 +137,7 @@ npm run lint
 npm audit
 ```
 
-## Configuración Adicional Recomendada
+## Configuración Adicional Recomendada (IDEAS XD)
 
 ### Para Producción:
 1. **Auth0**: Configurar autenticación real

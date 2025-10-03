@@ -45,7 +45,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-  // Verificar si ya está autenticado
+  // Verificar si ya está autenticado perra xD
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -56,7 +56,7 @@ export default function LoginPage() {
           redirectUser(userData.user.role)
         }
       } catch (error) {
-        // No autenticado, continuar con login
+        // No autenticado, continuar con login perra xD
       }
     }
     
@@ -117,7 +117,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // Validaciones básicas
+      // Validaciones básicas perra xD
       if (!formData.email || !formData.password) {
         throw new Error('Por favor completa todos los campos')
       }
@@ -140,7 +140,7 @@ export default function LoginPage() {
         throw new Error(data.error || 'Error al iniciar sesión')
       }
 
-      // Login exitoso
+      // Login exitoso perra xD
       setIsAuthenticated(true)
       redirectUser(data.user.role)
 
@@ -169,19 +169,19 @@ export default function LoginPage() {
       
       <main className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Header */}
+          {/* Header perra xD */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <Image 
                 src="/blacklog.jpg" 
-                alt="UniProjects Logo" 
+                alt="Codex" 
                 width={200} 
                 height={80}
                 className="h-16 w-auto"
               />
             </div>
             <h1 className="text-4xl font-bold text-foreground mb-2">
-              Bienvenido a UniProjects
+              Bienvenido a Codex
             </h1>
             <p className="text-lg text-muted-foreground">
               Conecta estudiantes talentosos con oportunidades empresariales
@@ -189,7 +189,7 @@ export default function LoginPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Formulario de Login */}
+            {/* Formulario de Login perra xD */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -271,7 +271,7 @@ export default function LoginPage() {
               </CardContent>
             </Card>
 
-            {/* Información de Roles */}
+            {/* Información de Roles perra xD */}
             <div className="space-y-6">
               <Card>
                 <CardHeader>

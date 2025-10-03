@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Hackaton Waza',
+  title: 'Codex',
   description: 'El WAZAAAAAAAAAA',
   generator: 'Next.js',
   icons: {

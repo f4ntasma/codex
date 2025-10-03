@@ -24,7 +24,7 @@ import {
 import Link from "next/link"
 
 export default function SubirProyectoPage() {
-  // Estados del formulario
+  // Estados del formulario pe
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -41,7 +41,7 @@ export default function SubirProyectoPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Agregar tag al proyecto
+  // Agregar tag al proyecto perra xD
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim()) && formData.tags.length < 8) {
       setFormData(prev => ({
@@ -52,7 +52,7 @@ export default function SubirProyectoPage() {
     }
   }
 
-  // Remover tag del proyecto
+  // Remover tag del proyecto perra xD
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
@@ -60,7 +60,7 @@ export default function SubirProyectoPage() {
     }))
   }
 
-  // Manejar cambios en inputs
+  // Manejar cambios en inputs perra xD
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -68,14 +68,14 @@ export default function SubirProyectoPage() {
     }))
   }
 
-  // Enviar formulario
+  // Enviar formulario perra xD
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      // Validaciones básicas
+      // Validaciones básicas perra xD
       if (!formData.title.trim() || !formData.description.trim() || !formData.author.trim()) {
         throw new Error('Por favor completa todos los campos requeridos')
       }
@@ -88,7 +88,7 @@ export default function SubirProyectoPage() {
         throw new Error('Agrega al menos una tecnología/tag')
       }
 
-      // Enviar a la API
+      // Enviar a la API perra xD
       const response = await fetch('/api/projects', {
         method: 'POST',
         headers: {
@@ -107,7 +107,7 @@ export default function SubirProyectoPage() {
       
       setSuccess(true)
       
-      // Limpiar formulario después de 3 segundos
+      // Limpiar formulario después de 3 segundos perra xD
       setTimeout(() => {
         setFormData({
           title: '',
@@ -134,7 +134,7 @@ export default function SubirProyectoPage() {
       <Header />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Header de la página */}
+        {/* Header de la página perra xD */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Comparte tu Proyecto
@@ -147,7 +147,7 @@ export default function SubirProyectoPage() {
 
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Formulario principal */}
+            {/* Formulario principal perra xD */}
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
@@ -158,7 +158,7 @@ export default function SubirProyectoPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Título del proyecto */}
+                    {/* Título del proyecto perra xD */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
                         <FileText className="h-4 w-4 inline mr-1" />
