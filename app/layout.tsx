@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   description: 'El WAZAAAAAAAAAA',
   generator: 'Next.js',
   icons: {
-    icon: '/logitoutp.png',
-    shortcut: '/logitoutp.png',
-    apple: '/logitoutp.png',
+    icon: '/codexicon.webp',
+    shortcut: '/codexicon.webp',
+    apple: '/codexicon.webp',
   },
 }
 

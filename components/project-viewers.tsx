@@ -132,7 +132,7 @@ export function ProjectViewers({ projectId, isOpen }: ProjectViewersProps) {
                   {stats.recent_viewers.map((viewer) => (
                     <div key={`${viewer.user_id}-${viewer.viewed_at}`} className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                       <Avatar className="h-8 w-8">
-                        <AvatarImage src={viewer.user_avatar || "/placeholder-user.jpg"} alt={viewer.user_name} />
+                        <AvatarImage src={viewer.user_avatar || "/perfilpe.webp"} alt={viewer.user_name} />
                         <AvatarFallback>{viewer.user_name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="flex-1">

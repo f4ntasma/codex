@@ -171,15 +171,7 @@ export default function LoginPage() {
         <div className="max-w-4xl mx-auto">
           {/* Header perra xD */}
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Image 
-                src="/blacklog.jpg" 
-                alt="Codex" 
-                width={200} 
-                height={80}
-                className="h-16 w-auto"
-              />
-            </div>
+            {/* Esta imagen la quité porque quita mucho espacio en el login xD*/}
             <h1 className="text-4xl font-bold text-foreground mb-2">
               Bienvenido a Codex
             </h1>

@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { lazy, memo } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +30,7 @@ export const ProjectCard = memo(function ProjectCard({ project, onLike, onOpenMo
         <Image
           src={project.image || "/placeholder.svg"}
           alt={project.title}
+          loading="lazy"
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"
         />

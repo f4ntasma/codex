@@ -77,11 +77,12 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-5 hover:opacity-80 transition-opacity">
           <Image 
-            src="/blacklog.jpg" 
-            alt="UniProjects Logo" 
+            src="/codexban.webp" 
+            alt="UniProjects Logo"
+            loading="lazy" 
             width={150} 
             height={100}
-            className="h-12 w-auto"
+            className="h-35 w-35 ml-10"
           />
         </Link>
 
@@ -125,7 +126,7 @@ export function Header() {
           ) : (
             <Link href="/login">
               <Button variant="ghost" size="sm">
-                Iniciar Sesión
+                
               </Button>
             </Link>
           )}
