@@ -5,7 +5,7 @@
 // Usa las variables de entorno si están disponibles, sino usa las credenciales proporcionadas
 export const supabaseConfig = {
   // URL de tu proyecto Supabase
-  url: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://gpqmuewqlnnqpeirqcng.supabase.co",
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "https://xqkqwktteaahfrsjnyvg.supabase.co",
   
   // Clave anónima para operaciones públicas (lectura de proyectos)
   anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhxa3F3a3R0ZWFhaGZyc2pueXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjExNzE2MDMsImV4cCI6MjA3Njc0NzYwM30.XofjhQCO60AQH7N9Y-lZyen8edhlP3t9Y5h69Mswka0",
