@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/teletuvis/supabase-admin'
 import { requireAdmin } from '@/lib/auth-middleware'
 import { appConfig } from '@/lib/config'
 import type { ProjectInsert } from '@/lib/supabase'
