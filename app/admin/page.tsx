@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Tag, Image as ImageIcon, Link as LinkIcon, Github, Globe, Type as TypeIcon, User as UserIcon } from "lucide-react"
+
 import { 
   Plus, 
   Edit, 
@@ -218,6 +220,7 @@ function AdminPanelContent() {
                 Gestiona proyectos, usuarios y configuraciones del sistema
               </p>
             </div>
+            
             <Button onClick={() => setShowCreateForm(true)} className="gap-2">
               <Plus className="h-4 w-4" />
               Nuevo Proyecto
@@ -293,109 +296,248 @@ function AdminPanelContent() {
           <>
             {/* Formulario de creación/edición */}
             {showCreateForm && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle>
-                    {editingProject ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">Título</label>
-                        <Input
-                          value={formData.title}
-                          onChange={(e) => setFormData({...formData, title: e.target.value})}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Autor</label>
-                        <Input
-                          value={formData.author}
-                          onChange={(e) => setFormData({...formData, author: e.target.value})}
-                          required
-                        />
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium">Descripción</label>
-                      <Textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
-                        required
-                      />
-                    </div>
+  <div className="mb-8 rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30">
+    <Card className="rounded-2xl border-0 shadow-xl">
+      <CardHeader className="rounded-t-2xl bg-muted/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3">
+              {editingProject ? 'Editar Proyecto' : 'Crear Nuevo Proyecto'}
+              {editingProject && (
+                <Badge variant="secondary" className="uppercase tracking-wide">Modo edición</Badge>
+              )}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Completa los campos y visualiza a la derecha cómo se verá tu tarjeta.
+            </p>
+          </div>
+          <Badge variant="outline">
+            {formData.status === 'published' ? 'Publicado' : formData.status === 'draft' ? 'Borrador' : 'Archivado'}
+          </Badge>
+        </div>
+      </CardHeader>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">Tags (separados por coma)</label>
-                        <Input
-                          value={formData.tags}
-                          onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                          placeholder="React, Node.js, MongoDB"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Imagen URL</label>
-                        <Input
-                          value={formData.image}
-                          onChange={(e) => setFormData({...formData, image: e.target.value})}
-                        />
-                      </div>
-                    </div>
+      <CardContent className="pt-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* grid principal: formulario + preview */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+            {/* Columna izquierda: campos */}
+            <div className="md:col-span-3 space-y-4">
+              {/* Título y Autor */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                  <TypeIcon className="h-4 w-4 text-muted-foreground" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium">GitHub URL</label>
-                        <Input
-                          value={formData.github_url}
-                          onChange={(e) => setFormData({...formData, github_url: e.target.value})}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium">Demo URL</label>
-                        <Input
-                          value={formData.demo_url}
-                          onChange={(e) => setFormData({...formData, demo_url: e.target.value})}
-                        />
-                      </div>
-                    </div>
+                    Título
+                  </label>
+                  <div className="relative">
+                    <TypeIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Sé claro y directo. Máximo recomendado: 60–70 caracteres.
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <UserIcon className="h-4 w-4 text-muted-foreground" />
+                    Autor
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={formData.author}
+                      onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
 
-                    <div className="flex items-center gap-4">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={formData.featured}
-                          onChange={(e) => setFormData({...formData, featured: e.target.checked})}
-                        />
-                        Destacado
-                      </label>
-                      <select
-                        value={formData.status}
-                        onChange={(e) => setFormData({...formData, status: e.target.value as any})}
-                        className="px-3 py-2 border border-border rounded-md bg-background"
-                      >
-                        <option value="draft">Borrador</option>
-                        <option value="published">Publicado</option>
-                        <option value="archived">Archivado</option>
-                      </select>
-                    </div>
+              {/* Descripción */}
+              <div>
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  Descripción
+                </label>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  required
+                  className="min-h-[110px]"
+                  placeholder="Explica en 1–3 líneas de qué trata tu proyecto y qué lo hace único."
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>Usa lenguaje concreto (qué hace, para quién y con qué tecnología).</span>
+                  <span>{formData.description.length} caracteres</span>
+                </div>
+              </div>
 
-                    <div className="flex gap-2">
-                      <Button type="submit">
-                        {editingProject ? 'Actualizar' : 'Crear'}
-                      </Button>
-                      <Button type="button" variant="outline" onClick={resetForm}>
-                        Cancelar
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-            )}
+              {/* Tags + Imagen */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Tag className="h-4 w-4 text-muted-foreground" />
+                    Tags (separados por coma)
+                  </label>
+                  <Input
+                    value={formData.tags}
+                    onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                    placeholder="React, Node.js, Supabase"
+                  />
+                  {/* chips preview */}
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.tags
+                      .split(',')
+                      .map(t => t.trim())
+                      .filter(Boolean)
+                      .slice(0, 8)
+                      .map((t, idx) => (
+                        <Badge key={idx} variant="secondary" className="rounded-full">{t}</Badge>
+                      ))
+                    }
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    Imagen (URL)
+                  </label>
+                  <div className="relative">
+                    <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={formData.image}
+                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Usa 1200×630px aprox. (se ve bien en tarjetas y redes).
+                  </p>
+                </div>
+              </div>
+
+              {/* Links */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Github className="h-4 w-4 text-muted-foreground" />
+                    GitHub URL
+                  </label>
+                  <div className="relative">
+                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={formData.github_url}
+                      onChange={(e) => setFormData({ ...formData, github_url: e.target.value })}
+                      placeholder="https://github.com/usuario/repositorio"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Demo URL
+                  </label>
+                  <div className="relative">
+                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      value={formData.demo_url}
+                      onChange={(e) => setFormData({ ...formData, demo_url: e.target.value })}
+                      placeholder="https://mi-demo.com"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status & destacado */}
+              <div className="flex flex-wrap items-center gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                    className="h-4 w-4 accent-primary"
+                  />
+                  Destacado
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                  className="px-3 py-2 border border-border rounded-md bg-background text-sm"
+                >
+                  <option value="draft">Borrador</option>
+                  <option value="published">Publicado</option>
+                  <option value="archived">Archivado</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Columna derecha: preview */}
+            <div className="md:col-span-2">
+              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                <div className="h-36 w-full bg-gradient-to-br from-primary/25 via-accent/25 to-transparent flex items-center justify-center">
+                  {formData.image ? (
+                    // si prefieres <img>, pero Next/Image suele ir aquí en producción
+                    <img
+                      src={formData.image}
+                      alt="preview"
+                      className="h-36 w-full object-cover"
+                      onError={(e) => (e.currentTarget.style.display = 'none')}
+                    />
+                  ) : (
+                    <div className="text-xs text-muted-foreground">Vista previa de imagen</div>
+                  )}
+                </div>
+                <div className="p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">{formData.title || 'Título del proyecto'}</h3>
+                    {formData.featured && <Badge variant="secondary">Destacado</Badge>}
+                    <Badge variant="outline" className="capitalize">{formData.status}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {formData.description || 'Aquí aparecerá la descripción corta del proyecto.'}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {formData.tags
+                      .split(',')
+                      .map(t => t.trim())
+                      .filter(Boolean)
+                      .slice(0, 5)
+                      .map((t, i) => (
+                        <Badge key={i} variant="outline" className="rounded-full text-xs">{t}</Badge>
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer de acciones sticky */}
+          <div className="-mx-6 -mb-6 px-6 py-4 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-b-2xl flex items-center justify-end gap-2">
+            <Button type="submit" className="gap-2">
+              {editingProject ? 'Actualizar' : 'Crear'}
+            </Button>
+            <Button type="button" variant="outline" onClick={resetForm}>
+              Cancelar
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  </div>
+)}
+
 
             {/* Lista de proyectos */}
             <Card>

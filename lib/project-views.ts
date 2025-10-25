@@ -1,45 +1,51 @@
+// lib/project-views.ts
 import { supabaseAdmin } from './supabase'
 
 export interface ProjectView {
   id: number
   project_id: number
-  user_id: string
-  user_name: string
-  user_role: string
+  user_id: string | null
+  user_name: string | null
+  user_role: 'student' | 'corporate' | 'admin'
   viewed_at: string
-  user_avatar?: string
+  user_avatar?: string | null
 }
 
-export interface ProjectViewStats {
-  total_views: number
-  unique_viewers: number
-  views_by_role: {
-    student: number
-    corporate: number
-    admin: number
-  }
-  recent_viewers: ProjectView[]
+function isUUID(v: unknown): v is string {
+  if (typeof v !== 'string') return false
+  // UUID v1–v5 (simple regex)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v)
 }
 
-export async function trackProjectView(projectId: number, userId: string, userName: string, userRole: string) {
+function normalizeRole(role: any): 'student' | 'corporate' | 'admin' {
+  return role === 'corporate' || role === 'admin' ? role : 'student'
+}
+
+export async function trackProjectView(
+  projectId: number,
+  userId: unknown,
+  userName: unknown,
+  userRole: unknown
+) {
   try {
+    const payload = {
+      project_id: projectId,
+      user_id: isUUID(userId) ? userId : null,
+      user_name: typeof userName === 'string' && userName.trim() ? userName.trim() : null,
+      user_role: normalizeRole(userRole),
+      viewed_at: new Date().toISOString(),
+    }
+
     const { data, error } = await supabaseAdmin
       .from('project_views')
-      .insert({
-        project_id: projectId,
-        user_id: userId,
-        user_name: userName,
-        user_role: userRole,
-        viewed_at: new Date().toISOString()
-      })
-      .select()
+      .insert(payload)
+      .select('*')
       .single()
 
     if (error) {
       console.error('Error tracking project view:', error)
       return null
     }
-
     return data
   } catch (error) {
     console.error('Error tracking project view:', error)
@@ -47,7 +53,7 @@ export async function trackProjectView(projectId: number, userId: string, userNa
   }
 }
 
-export async function getProjectViews(projectId: number): Promise<ProjectViewStats | null> {
+export async function getProjectViews(projectId: number) {
   try {
     const { data, error } = await supabaseAdmin
       .from('project_views')
@@ -60,11 +66,12 @@ export async function getProjectViews(projectId: number): Promise<ProjectViewSta
       return null
     }
 
-    const views = data || []
-    const uniqueViewers = new Set(views.map(view => view.user_id)).size
-    
-    const viewsByRole = views.reduce((acc, view) => {
-      acc[view.user_role] = (acc[view.user_role] || 0) + 1
+    const views = (data ?? []) as any[]
+    const uniqueViewers = new Set(views.map(v => v.user_id).filter(Boolean)).size
+
+    const viewsByRole = views.reduce<{ student: number; corporate: number; admin: number }>((acc, v) => {
+      const r = normalizeRole(v?.user_role)
+      acc[r] += 1
       return acc
     }, { student: 0, corporate: 0, admin: 0 })
 
@@ -72,30 +79,10 @@ export async function getProjectViews(projectId: number): Promise<ProjectViewSta
       total_views: views.length,
       unique_viewers: uniqueViewers,
       views_by_role: viewsByRole,
-      recent_viewers: views.slice(0, 10) // Últimos 10 viewers
+      recent_viewers: views.slice(0, 10),
     }
   } catch (error) {
     console.error('Error fetching project views:', error)
     return null
-  }
-}
-
-export async function getUserViewedProjects(userId: string): Promise<ProjectView[]> {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('project_views')
-      .select('*')
-      .eq('user_id', userId)
-      .order('viewed_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching user viewed projects:', error)
-      return []
-    }
-
-    return data || []
-  } catch (error) {
-    console.error('Error fetching user viewed projects:', error)
-    return []
   }
 }

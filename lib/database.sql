@@ -99,3 +99,91 @@ BEGIN
     ORDER BY rank DESC, p.stars DESC;
 END;
 $$ LANGUAGE plpgsql;
+
+-- =========================================
+--  Tablas auxiliares que usa tu código
+--  (NO cambian tu tabla "projects")
+-- =========================================
+
+-- Vistas por proyecto (para lib/project-views.ts)
+create table if not exists public.project_views (
+  id           bigserial primary key,
+  project_id   integer not null references public.projects(id) on delete cascade,
+  user_id      uuid null references auth.users(id) on delete set null,
+  user_name    text null,
+  user_role    text not null check (user_role in ('student','corporate','admin')),
+  user_avatar  text null,
+  viewed_at    timestamptz not null default now()
+);
+
+create index if not exists project_views_project_id_idx on public.project_views(project_id);
+create index if not exists project_views_viewed_at_idx  on public.project_views(viewed_at);
+create index if not exists project_views_user_id_idx    on public.project_views(user_id);
+
+-- Comentarios por proyecto (para /api/projects/[id]/comments)
+create table if not exists public.project_comments (
+  id           bigserial primary key,
+  project_id   integer not null references public.projects(id) on delete cascade,
+  author       text null,
+  content      text not null check (length(content) <= 2000),
+  created_at   timestamptz not null default now()
+);
+
+create index if not exists project_comments_project_id_idx on public.project_comments(project_id);
+create index if not exists project_comments_created_at_idx on public.project_comments(created_at);
+
+-- =========================================
+--  RLS (si vas a usar anon key desde el cliente)
+--  El service role del servidor IGNORA RLS.
+-- =========================================
+alter table public.project_views    enable row level security;
+alter table public.project_comments enable row level security;
+
+-- Leer comentarios (público)
+do $$ begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='project_comments' and policyname='read comments'
+  ) then
+    create policy "read comments" on public.project_comments
+      for select using (true);
+  end if;
+end $$;
+
+-- Insertar comentarios (público; ajusta si quieres exigir login)
+do $$ begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='project_comments' and policyname='insert comments'
+  ) then
+    create policy "insert comments" on public.project_comments
+      for insert with check (true);
+  end if;
+end $$;
+
+-- Insertar vistas (tracking)
+do $$ begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public' and tablename='project_views' and policyname='insert views'
+  ) then
+    create policy "insert views" on public.project_views
+      for insert with check (true);
+  end if;
+end $$;
+
+-- (Opcional) Leer project_views desde cliente:
+-- do $$ begin
+--   if not exists (
+--     select 1 from pg_policies
+--     where schemaname='public' and tablename='project_views' and policyname='read views'
+--   ) then
+--     create policy "read views" on public.project_views
+--       for select using (true);
+--   end if;
+-- end $$;
+
+-- =========================================
+--  Forzar recarga del schema cache (evita PGRST205)
+-- =========================================
+notify pgrst, 'reload schema';
