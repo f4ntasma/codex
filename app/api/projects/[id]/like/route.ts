@@ -51,13 +51,13 @@ export async function POST(
     return NextResponse.json({
       success: true,
       project: data,
-      message: '¡Gracias por tu like perra!',
+      message: '¡Gracias por tu like!',
       timestamp: new Date().toISOString()
     })
   } catch (error) {
     console.error('Unexpected error in like route:', error)
     return NextResponse.json(
-      { error: 'Internal error server' },
+      { error: 'Error interno del servidor' },
       { status: 500 }
     )
   }

@@ -6,7 +6,7 @@ import { Star, ExternalLink, Github, Eye } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import type { Project } from '@/lib/supabase'
+import type { Project } from '@/lib/types'
 
 interface ProjectCardProps {
   project: Project

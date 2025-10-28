@@ -126,7 +126,7 @@ export function Header() {
           ) : (
             <Link href="/login">
               <Button variant="ghost" size="sm">
-                
+                Iniciar Sesión
               </Button>
             </Link>
           )}

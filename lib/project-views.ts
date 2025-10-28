@@ -11,6 +11,17 @@ export interface ProjectView {
   user_avatar?: string | null
 }
 
+export interface ProjectViewStats {
+  total_views: number
+  unique_viewers: number
+  views_by_role: {
+    student: number
+    corporate: number
+    admin: number
+  }
+  recent_viewers: ProjectView[]
+}
+
 function isUUID(v: unknown): v is string {
   if (typeof v !== 'string') return false
   // UUID v1–v5 (simple regex)
@@ -53,7 +64,7 @@ export async function trackProjectView(
   }
 }
 
-export async function getProjectViews(projectId: number) {
+export async function getProjectViews(projectId: number): Promise<ProjectViewStats | null> {
   try {
     const { data, error } = await supabaseAdmin
       .from('project_views')
@@ -66,7 +77,7 @@ export async function getProjectViews(projectId: number) {
       return null
     }
 
-    const views = (data ?? []) as any[]
+    const views = (data ?? []) as ProjectView[]
     const uniqueViewers = new Set(views.map(v => v.user_id).filter(Boolean)).size
 
     const viewsByRole = views.reduce<{ student: number; corporate: number; admin: number }>((acc, v) => {
