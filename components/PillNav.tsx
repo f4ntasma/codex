@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
@@ -25,6 +26,15 @@ export interface PillNavProps {
   initialLoadAnimation?: boolean
 }
 
+// Alias de tipos de GSAP sin imports de tipos
+type GTimeline = gsap.core.Timeline
+type GTween = gsap.core.Tween
+
+// Tipado seguro para document.fonts (evita "any")
+interface DocumentWithFonts extends Document {
+  fonts: FontFaceSet
+}
+
 const PillNav: React.FC<PillNavProps> = ({
   logo,
   logoAlt = 'Logo',
@@ -41,19 +51,20 @@ const PillNav: React.FC<PillNavProps> = ({
 }) => {
   const resolvedPillTextColor = pillTextColor ?? baseColor
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const circleRefs = useRef<Array<HTMLSpanElement | null>>([])
-  const tlRefs = useRef<Array<gsap.core.Timeline | null>>([])
-  const activeTweenRefs = useRef<Array<gsap.core.Tween | null>>([])
+
+  const circleRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const tlRefs = useRef<(GTimeline | null)[]>([])
+  const activeTweenRefs = useRef<(GTween | null)[]>([])
   const logoImgRef = useRef<HTMLImageElement | null>(null)
-  const logoTweenRef = useRef<gsap.core.Tween | null>(null)
+  const logoTweenRef = useRef<GTween | null>(null)
   const hamburgerRef = useRef<HTMLButtonElement | null>(null)
   const mobileMenuRef = useRef<HTMLDivElement | null>(null)
   const navItemsRef = useRef<HTMLDivElement | null>(null)
-  const logoRef = useRef<HTMLAnchorElement | HTMLElement | null>(null)
+  const logoRef = useRef<HTMLAnchorElement | null>(null)
 
   useEffect(() => {
     const layout = () => {
-      circleRefs.current.forEach(circle => {
+      circleRefs.current.forEach((circle) => {
         if (!circle?.parentElement) return
 
         const pill = circle.parentElement as HTMLElement
@@ -101,26 +112,37 @@ const PillNav: React.FC<PillNavProps> = ({
       })
     }
 
+    // 1) primera disposición
     layout()
+
+    // 2) responsive
     const onResize = () => layout()
     window.addEventListener('resize', onResize)
 
-    if (document.fonts) {
-      document.fonts.ready.then(layout).catch(() => {})
+    // 3) espera a que carguen las fuentes si existe document.fonts
+    const fonts =
+      typeof document !== 'undefined' && 'fonts' in document
+        ? (document as DocumentWithFonts).fonts
+        : undefined
+
+    if (fonts?.ready) {
+      fonts.ready.then(layout).catch(() => {})
     }
 
+    // 4) estado inicial del menú móvil
     const menu = mobileMenuRef.current
     if (menu) {
       gsap.set(menu, { visibility: 'hidden', opacity: 0, scaleY: 1, y: 0 })
     }
 
+    // 5) animaciones de entrada
     if (initialLoadAnimation) {
-      const logo = logoRef.current
+      const logoEl = logoRef.current
       const navItems = navItemsRef.current
 
-      if (logo) {
-        gsap.set(logo, { scale: 0 })
-        gsap.to(logo, { scale: 1, duration: 0.6, ease })
+      if (logoEl) {
+        gsap.set(logoEl, { scale: 0 })
+        gsap.to(logoEl, { scale: 1, duration: 0.6, ease })
       }
 
       if (navItems) {
@@ -129,7 +151,13 @@ const PillNav: React.FC<PillNavProps> = ({
       }
     }
 
-    return () => window.removeEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+      // limpia tweens/timelines activos (current nunca es null: inicia como [])
+      for (const tw of activeTweenRefs.current) tw?.kill()
+      for (const tl of tlRefs.current) tl?.kill()
+      logoTweenRef.current?.kill()
+    }
   }, [items, ease, initialLoadAnimation])
 
   const handleEnter = (i: number) => {
@@ -162,7 +190,7 @@ const PillNav: React.FC<PillNavProps> = ({
     const menu = mobileMenuRef.current
 
     if (hamburger) {
-      const lines = hamburger.querySelectorAll('.hamburger-line')
+      const lines = hamburger.querySelectorAll<HTMLSpanElement>('.hamburger-line')
       if (newState) {
         gsap.to(lines[0], { rotation: 45, y: 3, duration: 0.3, ease })
         gsap.to(lines[1], { rotation: -45, y: -3, duration: 0.3, ease })
@@ -188,7 +216,9 @@ const PillNav: React.FC<PillNavProps> = ({
           duration: 0.2,
           ease,
           transformOrigin: 'top center',
-          onComplete: () => gsap.set(menu, { visibility: 'hidden' })
+          onComplete: () => {
+            if (menu) gsap.set(menu, { visibility: 'hidden' })
+          }
         })
       }
     }
@@ -196,7 +226,7 @@ const PillNav: React.FC<PillNavProps> = ({
     onMobileMenuClick?.()
   }
 
-  const isRouterLink = (href?: string) => href && href.startsWith('/')
+  const isRouterLink = (href?: string) => !!href && href.startsWith('/')
 
   const cssVars = {
     ['--base']: baseColor,
@@ -220,10 +250,11 @@ const PillNav: React.FC<PillNavProps> = ({
           href={items?.[0]?.href || '/'}
           aria-label="Home"
           onMouseEnter={handleLogoEnter}
-          ref={el => { logoRef.current = el as unknown as HTMLAnchorElement }}
+          ref={logoRef}
           className="rounded-full p-2 inline-flex items-center justify-center overflow-hidden"
           style={{ width: 'var(--nav-h)', height: 'var(--nav-h)', background: 'var(--base, #000)' }}
         >
+          {/* usamos <img> porque GSAP anima el DOM real */}
           <img src={logo} alt={logoAlt} ref={logoImgRef} className="w-full h-full object-cover block" />
         </Link>
 
@@ -248,7 +279,7 @@ const PillNav: React.FC<PillNavProps> = ({
                     className="hover-circle absolute left-1/2 bottom-0 rounded-full z-[1] block pointer-events-none"
                     style={{ background: 'var(--base, #000)', willChange: 'transform' }}
                     aria-hidden="true"
-                    ref={el => { circleRefs.current[i] = el }}
+                    ref={(el) => { circleRefs.current[i] = el }}
                   />
                   <span className="label-stack relative inline-block leading-[1] z-[2]">
                     <span className="pill-label relative z-[2] inline-block leading-[1]" style={{ willChange: 'transform' }}>
@@ -327,7 +358,7 @@ const PillNav: React.FC<PillNavProps> = ({
         style={{ background: 'var(--base, #f0f0f0)' }}
       >
         <ul className="list-none m-0 p-[3px] flex flex-col gap-[3px]">
-          {items.map(item => {
+          {items.map((item) => {
             const defaultStyle: React.CSSProperties = {
               background: 'var(--pill-bg, #fff)',
               color: 'var(--pill-text, #fff)'
