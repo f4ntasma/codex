@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -40,7 +40,7 @@ function isE164(phone: string) {
   return /^\+?[1-9]\d{7,14}$/.test(phone.trim())
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
@@ -481,5 +481,20 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   )
 }

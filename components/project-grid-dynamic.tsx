@@ -8,7 +8,7 @@ import { ArrowRight, Search, Filter, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useSearchDebounce } from '@/lib/hooks/use-debounce'
 import { appConfig } from '@/lib/config'
-import type { Project } from '@/lib/supabase'
+import type { Project } from '@/lib/types'
 
 interface ProjectGridDynamicProps {
   limit: number | null

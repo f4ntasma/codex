@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateToken, determineUserRole, isStudentEmail, isCorporateEmail } from '@/lib/auth'
 import { createAuthResponse } from '@/lib/auth-middleware'
 
+export const dynamic = 'force-dynamic'
+
 // Datos de usuarios de ejemplo (en producción vendrían de una base de datos)
 const users = [
   {

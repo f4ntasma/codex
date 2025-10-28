@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-middleware'
 import { appConfig } from '@/lib/config'
-import type { ProjectInsert } from '@/lib/supabase'
+import type { ProjectInsert } from '@/lib/types'
+
+export const dynamic = 'force-dynamic'
 
 // GET - Obtener todos los proyectos (ruta pública)
 export async function GET(request: NextRequest) {
