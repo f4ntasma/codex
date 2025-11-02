@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import PillNav from '@/components/PillNav'
 import { supabase } from '@/lib/supabase-client'  // cliente público
-const logoSrc = '/codexicon.webp'
+const logoSrc = '/symaicon.webp'
 
 interface LoginFormData {
   email: string
@@ -87,7 +87,7 @@ function LoginPageContent() {
     }
     checkAuth()
   }, [])
-
+  
   const userRoles: UserRole[] = [
     {
       role: 'student',
@@ -251,8 +251,8 @@ function LoginPageContent() {
       <main className="container mx-auto px-4 py-4">
         <div className="max-w-4xl mx-auto">
           {/* mb-8 -> mb-6, mt-2 -> mt-0, y h1 mb-0 */}
-          <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold text-foreground mb-0 mt-0">Bienvenido a Codex</h1>
+          <div className="text-center mb-6 mt-5">
+            <h1 className="text-4xl font-bold text-foreground mb-0 mt-0">Bienvenido a Syma</h1>
             <p className="text-lg text-muted-foreground">
               Conecta estudiantes talentosos con oportunidades empresariales
             </p>
@@ -275,7 +275,7 @@ function LoginPageContent() {
                   <div className="relative h-[64px]">
                     <PillNav
                       logo={logoSrc}
-                      logoAlt="Codex"
+                      logoAlt="Syma"
                       items={[
                         { label: 'Iniciar', href: '/login?tab=login' },
                         { label: 'Registro', href: '/login?tab=signup' },
@@ -283,10 +283,10 @@ function LoginPageContent() {
                       activeHref={activeHref}
                       className="!relative !top-0 !w-auto"
                       ease="power2.easeOut"
-                      baseColor="#000000"
-                      pillColor="#ffffff"
-                      hoveredPillTextColor="#ffffff"
-                      pillTextColor="#000000"
+                      baseColor="#0d5426ff"
+                      pillColor="#ffffffff"
+                      hoveredPillTextColor="#f6f1f1ff"
+                      pillTextColor="#202020ff"
                     />
                   </div>
                 </div>
@@ -305,7 +305,7 @@ function LoginPageContent() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="tu@universidad.edu"
+                        placeholder="pepe@universidad.edu"
                         required
                         className="w-full"
                       />
@@ -376,7 +376,7 @@ function LoginPageContent() {
 
                       <div>
                         <label className="text-sm font-medium">Email</label>
-                        <Input type="email" value={semail} onChange={e => setSEmail(e.target.value)} required placeholder="tu@correo.com" />
+                        <Input type="email" value={semail} onChange={e => setSEmail(e.target.value)} required placeholder="pepe@correo.com" />
                       </div>
 
                       <div>

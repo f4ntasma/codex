@@ -7,7 +7,7 @@ export function HeroSection() {
       <div className="max-w-3xl mx-auto text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium mb-6">
           <Sparkles className="h-4 w-4" />
-          Plataforma de Proyectos Universitarios
+          Plataforma de Proyectos Universitarios Para Mejorar El Mundo
         </div>
 
         <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">

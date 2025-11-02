@@ -5,13 +5,13 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Codex',
+  title: 'Syma',
   description: 'El WAZAAAAAAAAAA',
   generator: 'Next.js',
   icons: {
-    icon: '/codexicon.webp',
-    shortcut: '/codexicon.webp',
-    apple: '/codexicon.webp',
+    icon: '/symaicon.webp',
+    shortcut: '/symaicon.webp',
+    apple: '/symaicon.webp',
   },
 }
 

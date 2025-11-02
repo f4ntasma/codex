@@ -73,16 +73,16 @@ export function Header() {
   const navigationLinks = getNavigationLinks()
 
   return (
-    <header className="border-b border-border bg-card sticky top-0 z-50">
+    <header className="border-b border-border bg-card sticky z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-5 hover:opacity-80 transition-opacity">
           <Image 
-            src="/codexban.webp" 
+            src="/symalog.webp" 
             alt="UniProjects Logo"
             loading="lazy" 
             width={150} 
             height={100}
-            className="h-35 w-35 ml-10"
+            className="h-30 w-30 object-contain mt-6"
           />
         </Link>
 
