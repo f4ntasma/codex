@@ -1,31 +1,25 @@
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Syma',
-  description: 'El WAZAAAAAAAAAA',
-  generator: 'Next.js',
+  title: "Syma",
+  description: "Plataforma para compartir y descubrir proyectos universitarios.",
   icons: {
-    icon: '/symaicon.webp',
-    shortcut: '/symaicon.webp',
-    apple: '/symaicon.webp',
+    icon: "/symaicon.webp",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        {children}
-        <Analytics />
-      </body>
+    <html lang="es">
+      <body className={inter.className}>{children}</body>
     </html>
-  )
+  );
 }

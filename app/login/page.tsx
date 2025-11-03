@@ -17,10 +17,10 @@ import {
   AlertCircle,
   GraduationCap,
   Building2,
-  Shield
 } from "lucide-react"
 import PillNav from '@/components/PillNav'
-import { supabase } from '@/lib/supabase-client'  // cliente público
+import { supabase } from '@/lib/supabase-client'
+
 const logoSrc = '/symaicon.webp'
 
 interface LoginFormData {
@@ -36,40 +36,28 @@ interface UserRole {
   color: string
 }
 
-function isE164(phone: string) {
-  return /^\+?[1-9]\d{7,14}$/.test(phone.trim())
-}
-
 function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tabParam = searchParams.get('tab') === 'signup' ? 'signup' : 'login'
 
-  // --------- UI ----------
   const [mode, setMode] = useState<'login' | 'signup'>(tabParam)
-  useEffect(() => setMode(tabParam), [tabParam])
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' })
+  const [sname, setSName] = useState('')
+  const [semail, setSEmail] = useState('')
+  const [spass, setSPass] = useState('')
 
   const activeHref = useMemo(
     () => (mode === 'signup' ? '/login?tab=signup' : '/login?tab=login'),
     [mode]
   )
 
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-
-  // --------- Login ----------
-  const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' })
-
-  // --------- Signup ----------
-  const [sname, setSName] = useState('')
-  const [srole, setSRole] = useState<'student' | 'corporate'>('student')
-  const [semail, setSEmail] = useState('')
-  const [spass, setSPass] = useState('')
-  const [sphone, setSPhone] = useState('') // E.164
-  const [smsStep, setSmsStep] = useState<null | { phone: string }>(null)
-  const [smsCode, setSmsCode] = useState('')
+  useEffect(() => setMode(tabParam), [tabParam])
 
   // ¿ya está autenticado?
   useEffect(() => {
@@ -87,29 +75,22 @@ function LoginPageContent() {
     }
     checkAuth()
   }, [])
-  
+
   const userRoles: UserRole[] = [
     {
       role: 'student',
       title: 'Estudiante',
       description: 'Acceso a proyectos y perfil estudiantil',
       icon: <GraduationCap className="h-6 w-6" />,
-      color: 'bg-blue-500'
+      color: 'bg-blue-500',
     },
     {
       role: 'corporate',
-      title: 'Intercorp',
+      title: 'Empresa',
       description: 'Acceso a proyectos y funciones de contratación',
       icon: <Building2 className="h-6 w-6" />,
-      color: 'bg-green-500'
+      color: 'bg-green-500',
     },
-    {
-      role: 'admin',
-      title: 'Administrador',
-      description: 'Acceso completo al panel de administración',
-      icon: <Shield className="h-6 w-6" />,
-      color: 'bg-purple-500'
-    }
   ]
 
   const handleInputChange = (field: keyof LoginFormData, value: string) => {
@@ -119,26 +100,26 @@ function LoginPageContent() {
 
   const redirectUser = (role: string) => {
     switch (role) {
-      case 'student':   router.push('/students');  break
+      case 'student': router.push('/students'); break
       case 'corporate': router.push('/proyectos'); break
-      case 'admin':     router.push('/admin');     break
-      default:          router.push('/')
+      case 'admin': router.push('/admin'); break
+      default: router.push('/')
     }
   }
 
-  // ------------ LOGIN ------------
+  // ---------- LOGIN ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true); setError(null)
 
     try {
-      if (!formData.email || !formData.password) throw new Error('Por favor completa todos los campos')
-      if (!formData.email.includes('@')) throw new Error('Por favor ingresa un email válido')
+      if (!formData.email || !formData.password)
+        throw new Error('Por favor completa todos los campos')
 
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data.error || 'Error al iniciar sesión')
@@ -153,79 +134,32 @@ function LoginPageContent() {
     }
   }
 
-  // ------------ SIGNUP + SMS ------------
+  // ---------- SIGNUP ----------
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true); setError(null)
 
     try {
-      if (!isE164(sphone)) throw new Error('Teléfono inválido. Usa formato internacional (ej: +51..., +34..., +1...)')
+      // Solo permitir correos .edu
+      if (!semail.endsWith('.edu')) {
+        throw new Error('Solo se permiten correos institucionales que terminen en .edu')
+      }
 
-      // 1) Crear cuenta
-      const { data: su, error: e1 } = await supabase.auth.signUp({
+      // Crear cuenta en Supabase con rol "student"
+      const { error } = await supabase.auth.signUp({
         email: semail.trim(),
         password: spass,
         options: {
-          data: { role: srole, name: sname },
+          data: { role: 'student', name: sname },
           emailRedirectTo: `${location.origin}/auth/callback`,
-        }
-      })
-      if (e1) throw e1
-
-      // 2) Guardar teléfono -> envía OTP
-      const { error: e2 } = await supabase.auth.updateUser({ phone: sphone.trim() })
-      if (e2) throw e2
-
-      // 3) Guardar perfil (RLS debe permitir upsert del propio usuario)
-      const uid = su.user?.id
-      if (uid) {
-        await supabase.from('profiles').upsert({
-          id: uid,
-          email: semail.trim(),
-          phone: sphone.trim(),
-          role: srole,
-          name: sname
-        })
-      }
-
-      setSmsStep({ phone: sphone.trim() })
-      if (mode !== 'signup') router.replace('/login?tab=signup')
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No se pudo crear la cuenta'
-      setError(msg)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleVerifySms = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!smsStep) return
-    setLoading(true); setError(null)
-
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        phone: smsStep.phone,
-        token: smsCode.trim(),
-        type: 'sms'
+        },
       })
       if (error) throw error
 
-      // Obtener rol desde profiles y redirigir
-      const { data: userRes } = await supabase.auth.getUser()
-      const uid = userRes.user?.id
-      let finalRole: 'student' | 'corporate' | 'admin' = 'student'
-      if (uid) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', uid)
-          .single()
-        if (profile?.role) finalRole = profile.role as 'student' | 'corporate' | 'admin'
-      }
-      redirectUser(finalRole)
+      alert('Cuenta creada exitosamente. Por favor verifica tu correo e inicia sesión.')
+      router.push('/login?tab=login')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No se pudo verificar el código'
+      const msg = err instanceof Error ? err.message : 'No se pudo crear la cuenta'
       setError(msg)
     } finally {
       setLoading(false)
@@ -243,14 +177,12 @@ function LoginPageContent() {
       </div>
     )
   }
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      {/* py-12 -> py-4 para menos espacio arriba/abajo */}
       <main className="container mx-auto px-4 py-4">
         <div className="max-w-4xl mx-auto">
-          {/* mb-8 -> mb-6, mt-2 -> mt-0, y h1 mb-0 */}
           <div className="text-center mb-6 mt-5">
             <h1 className="text-4xl font-bold text-foreground mb-0 mt-0">Bienvenido a Syma</h1>
             <p className="text-lg text-muted-foreground">
@@ -258,20 +190,14 @@ function LoginPageContent() {
             </p>
           </div>
 
-          {/* gap-20 -> gap-12, pb-8 mb-20 -> pb-4 mb-8 para menos espacio vertical columna */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pb-4 mb-8">
             {/* Card izquierda: Login / Registro */}
             <Card>
               <CardHeader className="pb-2">
-                {/* Título sin ícono */}
                 <CardTitle className="w-full h-full">
                   {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
                 </CardTitle>
-
-                {/* PillNav DENTRO del formulario (en el header del card) */}
                 <div className="relative mt-3">
-                  {/* Este contenedor reserva espacio para el PillNav, ya que por defecto
-                      el componente trae un wrapper absolute. */}
                   <div className="relative h-[64px]">
                     <PillNav
                       logo={logoSrc}
@@ -352,86 +278,49 @@ function LoginPageContent() {
                   </form>
                 )}
 
-                {/* SIGNUP + SMS */}
+                {/* SIGNUP */}
                 {mode === 'signup' && (
-                  !smsStep ? (
-                    <form onSubmit={handleSignup} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-sm font-medium">Nombre</label>
-                          <Input value={sname} onChange={e => setSName(e.target.value)} placeholder="Tu nombre" />
+                  <form onSubmit={handleSignup} className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium">Nombre</label>
+                      <Input value={sname} onChange={e => setSName(e.target.value)} placeholder="Tu nombre completo" />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Email institucional (.edu)</label>
+                      <Input
+                        type="email"
+                        value={semail}
+                        onChange={e => setSEmail(e.target.value)}
+                        required
+                        placeholder="ejemplo@universidad.edu"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium">Contraseña</label>
+                      <Input
+                        type="password"
+                        value={spass}
+                        onChange={e => setSPass(e.target.value)}
+                        required
+                        placeholder="Mín. 6 caracteres"
+                      />
+                    </div>
+
+                    {error && (
+                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                          <p className="text-destructive text-sm">{error}</p>
                         </div>
-                        <div>
-                          <label className="text-sm font-medium">Rol</label>
-                          <select
-                            className="w-full border rounded-md px-3 py-2 bg-background"
-                            value={srole}
-                            onChange={e => setSRole(e.target.value as 'student' | 'corporate')}
-                          >
-                            <option value="student">Estudiante</option>
-                            <option value="corporate">Intercorp</option>
-                          </select>
-                        </div>
                       </div>
+                    )}
 
-                      <div>
-                        <label className="text-sm font-medium">Email</label>
-                        <Input type="email" value={semail} onChange={e => setSEmail(e.target.value)} required placeholder="pepe@correo.com" />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium">Contraseña</label>
-                        <Input type="password" value={spass} onChange={e => setSPass(e.target.value)} required placeholder="Mín. 6 caracteres" />
-                      </div>
-
-                      <div>
-                        <label className="text-sm font-medium">Teléfono (SMS – formato internacional)</label>
-                        <Input value={sphone} onChange={e => setSPhone(e.target.value)} placeholder="+51 999 999 999" required />
-                      </div>
-
-                      {error && (
-                        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                            <p className="text-destructive text-sm">{error}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta...</>) : 'Crear cuenta y enviar SMS'}
-                      </Button>
-                    </form>
-                  ) : (
-                    <form onSubmit={handleVerifySms} className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium">
-                          Ingresa el código enviado por SMS a <span className="font-semibold">{smsStep.phone}</span>
-                        </label>
-                        <Input
-                          inputMode="numeric"
-                          pattern="\d*"
-                          value={smsCode}
-                          onChange={e => setSmsCode(e.target.value)}
-                          placeholder="Código de 6 dígitos"
-                          required
-                        />
-                      </div>
-
-                      {error && (
-                        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 text-destructive" />
-                            <p className="text-destructive text-sm">{error}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Verificando...</>) : 'Verificar SMS'}
-                      </Button>
-                    </form>
-                  )
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta...</>) : 'Crear cuenta'}
+                    </Button>
+                  </form>
                 )}
               </CardContent>
             </Card>
@@ -464,15 +353,11 @@ function LoginPageContent() {
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Estudiantes</Badge>
-                    <span className="text-sm text-muted-foreground">Correo institucional (.edu)</span>
+                    <span className="text-sm text-muted-foreground">Correo institucional (university.edu)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Intercorp</Badge>
-                    <span className="text-sm text-muted-foreground">Correo corporativo (intercorp.com)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Admin</Badge>
-                    <span className="text-sm text-muted-foreground">Acceso especial</span>
+                    <Badge variant="secondary">Empresas</Badge>
+                    <span className="text-sm text-muted-foreground">Correo de empresa (.corporate)</span>
                   </div>
                 </CardContent>
               </Card>

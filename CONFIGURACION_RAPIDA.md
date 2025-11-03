@@ -1,4 +1,4 @@
-# CONFIGURACIÓN RÁPIDA - UniProjects
+# CONFIGURACIÓN RÁPIDA - Syma
 
 ## PASO 1: Crear la Base de Datos (URGENTE)
 

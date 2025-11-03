@@ -349,5 +349,70 @@ SET search_path = pg_catalog, public;
 ALTER FUNCTION public.search_projects(text)
 SET search_path = pg_catalog, public;
 
+-- =======================================================
+--  Función y Trigger para Asignación Automática de Roles
+-- =======================================================
+
+create or replace function public.assign_role_on_signup()
+returns trigger as $$
+declare
+  user_role text;
+  user_email text;
+  email_domain text;
+  is_student boolean;
+  is_free_provider boolean;
+begin
+  -- Obtener el email del nuevo usuario
+  user_email := new.email;
+  email_domain := split_part(user_email, '@', 2);
+
+  -- Lista de dominios educativos (puedes expandirla)
+  is_student := email_domain like '%.edu' or
+                email_domain like '%.edu.%' or
+                email_domain like '%.ac.%';
+
+  -- Lista de proveedores de correo gratuitos
+  is_free_provider := email_domain in (
+    'gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'aol.com', 'icloud.com', 'protonmail.com', 'gmx.com'
+  );
+
+  -- Lógica de asignación de rol
+  if is_student then
+    user_role := 'student';
+  elsif not is_free_provider then
+    user_role := 'corporate';
+  else
+    -- Si es un proveedor gratuito y no es un dominio .edu, no se asigna rol y no se crea perfil.
+    -- El usuario podrá iniciar sesión, pero no tendrá perfil ni acceso a funcionalidades.
+    return null;
+  end if;
+
+  -- Insertar en la tabla de perfiles con el rol asignado
+  insert into public.profiles (id, email, name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email, '@', 1)), -- Usa el nombre si está, si no, la parte local del email
+    user_role
+  );
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+-- Crear el trigger que se ejecuta después de un nuevo registro
+-- Lo borramos si ya existe para asegurar que siempre esté la última versión
+drop trigger if exists on_auth_user_created on auth.users;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute procedure public.assign_role_on_signup();
+
+
+-- NOTA PARA EL ADMIN:
+-- Para asignarte el rol de 'admin', regístrate normalmente.
+-- Luego, ve a la tabla 'profiles' en Supabase y cambia manualmente tu 'role' a 'admin'.
+-- Ejemplo: UPDATE public.profiles SET role = 'admin' WHERE email = 'tu-correo-admin@ejemplo.com';
+
 -- Recarga el schema cache de PostgREST
 notify pgrst, 'reload schema';

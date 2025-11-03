@@ -1,4 +1,4 @@
-# Guía de Configuración Completa - Codex
+# Guía de Configuración Completa - Syma
 
 ## ✅ Errores Solucionados
 
