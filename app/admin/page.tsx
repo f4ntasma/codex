@@ -31,7 +31,7 @@ import {
   Mail,
   Bell
 } from "lucide-react"
-import type { Project } from '@/lib/supabase'
+import type { Project } from '@/lib/types'
 
 function AdminPanelContent() {
   const [projects, setProjects] = useState<Project[]>([])

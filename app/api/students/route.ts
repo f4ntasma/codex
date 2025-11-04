@@ -17,7 +17,36 @@ const students = [
     joined_date: '2023-01-15',
     projects_count: 5
   },
-  // ... más estudiantes
+  {
+    id: '2',
+    name: 'Carlos Ramírez',
+    email: 'carlos.ramirez@universidad.edu',
+    avatar: '',
+    university: 'Universidad Tecnológica',
+    career: 'Ingeniería de Software',
+    semester: 6,
+    location: 'Medellín, Colombia',
+    skills: ['Vue.js', 'Laravel', 'MySQL', 'Docker'],
+    github_url: 'https://github.com/carlosramirez',
+    portfolio_url: 'https://carlosramirez.dev',
+    joined_date: '2023-03-20',
+    projects_count: 3
+  },
+  {
+    id: '3',
+    name: 'Ana Martínez',
+    email: 'ana.martinez@universidad.edu',
+    avatar: '',
+    university: 'Universidad de los Andes',
+    career: 'Ciencia de la Computación',
+    semester: 10,
+    location: 'Bogotá, Colombia',
+    skills: ['Python', 'Machine Learning', 'TensorFlow', 'Pandas'],
+    github_url: 'https://github.com/anamartinez',
+    portfolio_url: 'https://anamartinez.dev',
+    joined_date: '2022-09-10',
+    projects_count: 8
+  }
 ]
 
 export async function GET(request: NextRequest) {
