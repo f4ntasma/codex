@@ -6,7 +6,7 @@ import { ProjectModal } from "@/components/project-modal"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
-import type { Project } from '@/lib/supabase'
+import type { Project } from '@/lib/types'
 
 // Datos de ejemplo - en producción vendrían de una base de datos
 const allProjects = [
