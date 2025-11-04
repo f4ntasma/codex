@@ -15,26 +15,33 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const status = searchParams.get('status') || 'published'
 
-    // Construir la consulta base
-    let query = supabaseAdmin
-      .from('projects')
-      .select('*')
-      .order('stars', { ascending: false })
-
-    // Filtrar por estado (ahora permite ver todos los estados sin autenticación)
-    if (status !== 'all') {
-      query = query.eq('status', status)
-    }
-
-    // Filtrar por proyectos destacados
-    if (featured === 'true') {
-      query = query.eq('featured', true)
-    }
-
-    // Búsqueda por texto en título, descripción y autor
+    // Si hay un término de búsqueda, usar la función de búsqueda de texto completo (mucho más rápida)
     if (search && search.length >= 2) {
-      query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,author.ilike.%${search}%`)
+      let query = supabaseAdmin
+        .rpc('search_projects', { search_term: search })
+        .order('stars', { ascending: false })
+
+      if (limit) {
+        const limitNum = Math.min(parseInt(limit), appConfig.pagination.maxLimit)
+        query = query.limit(limitNum)
+      }
+
+      const { data, error } = await query
+      if (error) throw error
+      
+      return NextResponse.json({
+        projects: data,
+        count: data?.length || 0,
+        hasMore: data?.length === parseInt(limit || '0'),
+        timestamp: new Date().toISOString()
+      })
     }
+
+    // --- Consulta normal si no hay búsqueda ---
+    let query = supabaseAdmin.from('projects').select('*').order('stars', { ascending: false })
+
+    if (status !== 'all') query = query.eq('status', status)
+    if (featured === 'true') query = query.eq('featured', true)
 
     // Aplicar límite con validación
     if (limit) {

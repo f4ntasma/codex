@@ -1,6 +1,6 @@
-# Guía de Configuración - UniProjects
+# Guía de Configuración - Syma
 
-Esta guía te ayudará a configurar completamente el proyecto UniProjects con todas las funcionalidades implementadas.
+Esta guía te ayudará a configurar completamente el proyecto Syma con todas las funcionalidades implementadas.
 
 ## 📋 Requisitos Previos
 

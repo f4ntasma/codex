@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
+// Memoizamos el Header para evitar que se re-renderice con cada cambio en el formulario
+const MemoizedHeader = memo(Header);
 
 export default function SubirProyectoPage() {
   // Estados del formulario pe
@@ -134,7 +137,7 @@ export default function SubirProyectoPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <MemoizedHeader />
       
       <main className="container mx-auto px-4 py-8">
         {/* Header de la página perra xD */}
@@ -568,4 +571,3 @@ export default function SubirProyectoPage() {
     </div>
   )
 }
-

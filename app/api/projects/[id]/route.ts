@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-middleware'
-import type { ProjectUpdate } from '@/lib/supabase'
+import type { ProjectUpdate } from '@/lib/types'
 
 // GET - Obtener proyecto por ID
 export async function GET(
