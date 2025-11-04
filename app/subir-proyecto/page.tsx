@@ -19,9 +19,12 @@ import {
   Image as ImageIcon,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  Star
 } from "lucide-react"
 import Link from "next/link"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function SubirProyectoPage() {
   // Estados del formulario pe
@@ -145,19 +148,27 @@ export default function SubirProyectoPage() {
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Formulario principal perra xD */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    Información del Proyecto
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Formulario principal */}
+            <div className="lg:col-span-3">
+              <div className="rounded-2xl p-[1px] bg-gradient-to-r from-primary/30 via-accent/30 to-primary/30">
+                <Card className="rounded-2xl border-0 shadow-xl">
+                  <CardHeader className="rounded-t-2xl bg-muted/30">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Upload className="h-5 w-5" />
+                          Información del Proyecto
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Completa los campos y visualiza a la derecha cómo se verá tu tarjeta.
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Título del proyecto perra xD */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
@@ -332,47 +343,165 @@ export default function SubirProyectoPage() {
                       </div>
                     )}
 
-                    {/* Botón de envío */}
-                    <div className="flex gap-4">
-                      <Button 
-                        type="submit" 
-                        disabled={loading || success}
-                        className="flex-1"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Subiendo Proyecto...
-                          </>
-                        ) : success ? (
-                          <>
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            ¡Proyecto Subido!
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Subir Proyecto
-                          </>
-                        )}
-                      </Button>
-                      
-                      <Button 
-                        type="button" 
-                        variant="outline"
-                        onClick={() => window.history.back()}
-                        disabled={loading}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+                      {/* Footer de acciones */}
+                      <div className="-mx-6 -mb-6 px-6 py-4 border-t bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-b-2xl flex items-center justify-end gap-2">
+                        <Button 
+                          type="submit" 
+                          disabled={loading || success}
+                          className="gap-2"
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Subiendo...
+                            </>
+                          ) : success ? (
+                            <>
+                              <CheckCircle className="h-4 w-4" />
+                              ¡Subido!
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4" />
+                              Subir Proyecto
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => window.history.back()}
+                          disabled={loading}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
 
-            {/* Panel lateral con información */}
-            <div className="space-y-6">
+            {/* Columna derecha: Vista previa en tiempo real */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Vista previa de la tarjeta */}
+              <Card className="sticky top-8">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Vista Previa
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Así se verá tu proyecto en la plataforma
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
+                    {/* Imagen del proyecto */}
+                    <div className="h-48 w-full bg-gradient-to-br from-primary/25 via-accent/25 to-transparent flex items-center justify-center relative overflow-hidden">
+                      {formData.image ? (
+                        <img
+                          src={formData.image}
+                          alt="Vista previa"
+                          className="h-48 w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <div className="text-xs text-muted-foreground flex flex-col items-center gap-2">
+                          <ImageIcon className="h-8 w-8" />
+                          <span>Vista previa de imagen</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Contenido de la tarjeta */}
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-lg text-foreground line-clamp-2">
+                          {formData.title || 'Título del proyecto'}
+                        </h3>
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {formData.description || 'Aquí aparecerá la descripción corta del proyecto.'}
+                      </p>
+                      
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        {formData.tags.length > 0 ? (
+                          formData.tags.slice(0, 5).map((tag, i) => (
+                            <Badge key={i} variant="outline" className="rounded-full text-xs">
+                              {tag}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Agrega tecnologías...</span>
+                        )}
+                      </div>
+                      
+                      {/* Footer de la tarjeta */}
+                      <div className="pt-3 border-t border-border flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={formData.author_avatar || "/placeholder.svg"} alt={formData.author || "Autor"} />
+                            <AvatarFallback>
+                              {formData.author ? formData.author[0].toUpperCase() : 'A'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm text-foreground font-medium">
+                            {formData.author || 'Tu nombre'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 px-2 gap-1"
+                            disabled
+                          >
+                            <Star className="h-4 w-4 fill-accent text-accent" />
+                            <span className="text-sm font-medium">0</span>
+                          </Button>
+                          
+                          <div className="flex items-center gap-1">
+                            {formData.github_url && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0"
+                                asChild
+                              >
+                                <a href={formData.github_url} target="_blank" rel="noopener noreferrer">
+                                  <Github className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
+                            {formData.demo_url && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0"
+                                asChild
+                              >
+                                <a href={formData.demo_url} target="_blank" rel="noopener noreferrer">
+                                  <Eye className="h-4 w-4" />
+                                </a>
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Panel lateral con información */}
+              <div className="space-y-6">
               {/* Consejos */}
               <Card>
                 <CardHeader>
