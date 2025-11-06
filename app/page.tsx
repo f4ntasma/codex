@@ -3,8 +3,9 @@
 import { Header } from "@/components/header"
 import { ProjectGridDynamic } from "@/components/project-grid-dynamic"
 import { HeroSection } from "@/components/hero-section"
+import { AuthGuard } from "@/components/auth-guard"
 
-export default function HomePage() {
+function HomePageContent() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -13,5 +14,13 @@ export default function HomePage() {
         <ProjectGridDynamic limit={24} showViewMore={true} />
       </main>
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <AuthGuard>
+      <HomePageContent />
+    </AuthGuard>
   )
 }

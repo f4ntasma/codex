@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
+import { supabase } from '@/lib/supabase-client'
 
 interface User {
   id: string
@@ -26,34 +27,87 @@ export function AuthGuard({ children, allowedRoles, redirectTo = '/login' }: Aut
   const router = useRouter()
 
   useEffect(() => {
+    let isMounted = true
+
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me')
+        // Verificar sesión de Supabase inmediatamente (sin delay inicial)
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        if (!response.ok) {
-          router.push(redirectTo)
+        if (!isMounted) return
+        
+        if (sessionError || !session) {
+          router.replace(redirectTo)
+          setLoading(false)
           return
         }
 
-        const data = await response.json()
-        const userData = data.user
+        // Obtener perfil del usuario
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+
+        if (!isMounted) return
+
+        if (profileError || !profile) {
+          console.error('Profile error:', profileError)
+          router.replace(redirectTo)
+          setLoading(false)
+          return
+        }
+
+        const userData: User = {
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
+          role: profile.role,
+          avatar: profile.avatar || undefined,
+          university: profile.university || undefined,
+          company: profile.company || undefined
+        }
 
         // Verificar roles permitidos
         if (allowedRoles && !allowedRoles.includes(userData.role)) {
-          router.push('/unauthorized')
+          router.replace('/unauthorized')
+          setLoading(false)
           return
         }
 
-        setUser(userData)
+        if (isMounted) {
+          setUser(userData)
+          setLoading(false)
+        }
       } catch (error) {
         console.error('Auth check failed:', error)
-        router.push(redirectTo)
-      } finally {
-        setLoading(false)
+        if (isMounted) {
+          router.replace(redirectTo)
+          setLoading(false)
+        }
       }
     }
 
     checkAuth()
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return
+      
+      if (!session) {
+        setUser(null)
+        router.replace(redirectTo)
+      } else {
+        checkAuth()
+      }
+    })
+
+    return () => {
+      isMounted = false
+      if (subscription) {
+        subscription.unsubscribe()
+      }
+    }
   }, [allowedRoles, redirectTo, router])
 
   if (loading) {

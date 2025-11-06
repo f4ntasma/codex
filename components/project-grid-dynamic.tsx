@@ -8,6 +8,7 @@ import { ArrowRight, Search, Filter, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useSearchDebounce } from '@/lib/hooks/use-debounce'
 import { appConfig } from '@/lib/config'
+import { supabase } from '@/lib/supabase-client'
 import type { Project } from '@/lib/types'
 
 interface ProjectGridDynamicProps {
@@ -25,6 +26,7 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   
   // Usar debounce para la búsqueda para evitar demasiadas consultas
   const { searchTerm: debouncedSearchTerm, shouldSearch, isSearching } = useSearchDebounce(
@@ -39,12 +41,26 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     setError(null)
     
     try {
+      // Obtener el token de Supabase
+      const { data: { session } } = await supabase.auth.getSession()
+      const accessToken = session?.access_token
+
       const params = new URLSearchParams()
       if (limit) params.append('limit', limit.toString())
       if (showFeaturedOnly) params.append('featured', 'true')
       if (shouldSearch) params.append('search', debouncedSearchTerm)
 
-      const response = await fetch(`/api/projects?${params}`)
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`
+      }
+
+      const response = await fetch(`/api/projects?${params}`, {
+        headers
+      })
       
       if (response.ok) {
         const data = await response.json()
@@ -66,29 +82,55 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     }
   }, [limit, showFeaturedOnly, debouncedSearchTerm, shouldSearch])
 
-  // Cargar proyectos al montar el componente o cuando cambien los filtros
+  // Verificar autenticación antes de cargar proyectos
   useEffect(() => {
-    if (initialProjects.length === 0) {
-      loadProjects()
-    }
-  }, [loadProjects, initialProjects.length])
-
-  // Obtener información del usuario
-  useEffect(() => {
-    const fetchUser = async () => {
+    const checkAuthAndLoad = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
+        // Verificar sesión de Supabase
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session) {
+          setIsAuthenticated(true)
+          
+          // Obtener información del usuario directamente desde Supabase
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            
+            if (!error && profile) {
+              setUser({
+                id: profile.id,
+                email: profile.email,
+                name: profile.name,
+                role: profile.role,
+                avatar: profile.avatar || undefined
+              })
+            }
+          } catch (error) {
+            console.error('Error fetching user:', error)
+          }
+          
+          // Solo cargar proyectos si está autenticado y no hay proyectos iniciales
+          if (initialProjects.length === 0) {
+            loadProjects()
+          }
+        } else {
+          setIsAuthenticated(false)
+          setError('Debes iniciar sesión para ver los proyectos')
         }
       } catch (error) {
-        console.error('Error fetching user:', error)
+        console.error('Error checking auth:', error)
+        setIsAuthenticated(false)
+        setError('Error al verificar autenticación')
       }
     }
     
-    fetchUser()
-  }, [])
+    checkAuthAndLoad()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialProjects.length])
 
   // Dar like a un proyecto (ahora usando ruta pública)
   const handleLike = useCallback(async (projectId: number) => {
@@ -246,10 +288,18 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
         </div>
       )}
 
-      {displayedProjects.length === 0 && !loading && (
+      {displayedProjects.length === 0 && !loading && isAuthenticated && (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">
             No se encontraron proyectos que coincidan con tu búsqueda.
+          </p>
+        </div>
+      )}
+
+      {!isAuthenticated && !loading && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-lg">
+            {error || 'Debes iniciar sesión para ver los proyectos.'}
           </p>
         </div>
       )}
