@@ -21,7 +21,49 @@ export async function POST(request: NextRequest) {
       password,
     })
 
-    if (error || !data.user)
+    if (error) {
+      // Si el error es por email no confirmado, confirmarlo automáticamente y reintentar
+      if (error.message?.includes('email') && error.message?.includes('confirm')) {
+        // Buscar y confirmar el usuario automáticamente
+        const { data: { users } } = await supabase.auth.admin.listUsers()
+        const user = users?.find(u => u.email === email.trim())
+        
+        if (user) {
+          await supabase.auth.admin.updateUserById(user.id, {
+            email_confirm: true
+          })
+          
+          // Reintentar login después de confirmar
+          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          })
+          
+          if (retryError || !retryData.user) {
+            return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
+          }
+          
+          // Continuar con el login exitoso
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', retryData.user.id)
+            .single()
+
+          const userData = {
+            id: retryData.user.id,
+            email: retryData.user.email,
+            role: profile?.role || 'student',
+          }
+
+          return NextResponse.json({ user: userData })
+        }
+      }
+      
+      return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
+    }
+
+    if (!data.user)
       return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
 
     // Recuperar rol desde tabla profiles

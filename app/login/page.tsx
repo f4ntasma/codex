@@ -140,8 +140,56 @@ function LoginPageContent() {
         password: formData.password,
       })
 
-      if (error || !data.user) {
+      if (error) {
+        // Si el error es por email no confirmado, usar el endpoint para confirmarlo automáticamente
+        if (error.message?.toLowerCase().includes('email') && error.message?.toLowerCase().includes('confirm')) {
+          try {
+            const confirmResponse = await fetch('/api/auth/confirm-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email: formData.email.trim() })
+            })
+
+            if (confirmResponse.ok) {
+              // Reintentar login después de confirmar
+              const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                email: formData.email.trim(),
+                password: formData.password,
+              })
+
+              if (retryError || !retryData.user) {
+                throw new Error(retryError?.message || 'Credenciales inválidas')
+              }
+
+              // Continuar con el login exitoso
+              const { data: { session: newSession } } = await supabase.auth.getSession()
+              if (!newSession) {
+                throw new Error('Error al establecer la sesión')
+              }
+
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', retryData.user.id)
+                .single()
+
+              setIsAuthenticated(true)
+              redirectUser(profile?.role || 'student')
+              return
+            }
+          } catch (confirmErr) {
+            console.error('Error confirming email:', confirmErr)
+            // Continuar con el error original
+          }
+        }
+        
         throw new Error(error?.message || 'Credenciales inválidas')
+      }
+
+      if (!data.user) {
+        throw new Error('Credenciales inválidas')
       }
 
       // Verificar que la sesión esté disponible (Supabase ya la establece inmediatamente)
@@ -175,13 +223,14 @@ function LoginPageContent() {
     setLoading(true); setError(null)
 
     try {
-      // Solo permitir correos .edu
-      if (!semail.endsWith('.edu')) {
-        throw new Error('Solo se permiten correos institucionales que terminen en .edu')
+      // Solo permitir correos gmail.com
+      const emailDomain = semail.trim().split('@')[1]?.toLowerCase()
+      if (emailDomain !== 'gmail.com') {
+        throw new Error('Solo se permiten correos de Gmail (gmail.com)')
       }
 
       // Crear cuenta en Supabase con rol "student"
-      const { error } = await supabase.auth.signUp({
+      const { data: signupData, error } = await supabase.auth.signUp({
         email: semail.trim(),
         password: spass,
         options: {
@@ -191,8 +240,35 @@ function LoginPageContent() {
       })
       if (error) throw error
 
-      alert('Cuenta creada exitosamente. Por favor verifica tu correo e inicia sesión.')
-      router.push('/login?tab=login')
+      // Confirmar email automáticamente (temporalmente desactivada verificación)
+      if (signupData.user) {
+        try {
+          const confirmResponse = await fetch('/api/auth/confirm-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: semail.trim() })
+          })
+
+          if (confirmResponse.ok) {
+            alert('Cuenta creada exitosamente. Ya puedes iniciar sesión.')
+            router.push('/login?tab=login')
+          } else {
+            // Si falla la confirmación automática, mostrar mensaje de verificación normal
+            alert('Cuenta creada exitosamente. Por favor verifica tu correo e inicia sesión.')
+            router.push('/login?tab=login')
+          }
+        } catch (confirmErr) {
+          console.error('Error confirming email:', confirmErr)
+          // Continuar aunque falle la confirmación automática
+          alert('Cuenta creada exitosamente. Ya puedes iniciar sesión.')
+          router.push('/login?tab=login')
+        }
+      } else {
+        alert('Cuenta creada exitosamente. Ya puedes iniciar sesión.')
+        router.push('/login?tab=login')
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No se pudo crear la cuenta'
       setError(msg)
@@ -266,7 +342,7 @@ function LoginPageContent() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="pepe@universidad.edu"
+                        placeholder="usuario@gmail.com"
                         required
                         className="w-full"
                       />
@@ -322,13 +398,13 @@ function LoginPageContent() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Email institucional (.edu)</label>
+                      <label className="text-sm font-medium">Email de Gmail</label>
                       <Input
                         type="email"
                         value={semail}
                         onChange={e => setSEmail(e.target.value)}
                         required
-                        placeholder="ejemplo@universidad.edu"
+                        placeholder="ejemplo@gmail.com"
                       />
                     </div>
 
@@ -388,7 +464,7 @@ function LoginPageContent() {
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Estudiantes</Badge>
-                    <span className="text-sm text-muted-foreground">Correo institucional (university.edu)</span>
+                    <span className="text-sm text-muted-foreground">Correo de Gmail (gmail.com)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Empresas</Badge>

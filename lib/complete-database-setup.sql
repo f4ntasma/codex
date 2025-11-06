@@ -366,14 +366,15 @@ begin
   user_email := new.email;
   email_domain := split_part(user_email, '@', 2);
 
-  -- Lista de dominios educativos (puedes expandirla)
+  -- Lista de dominios educativos (incluye gmail.com para estudiantes)
   is_student := email_domain like '%.edu' or
                 email_domain like '%.edu.%' or
-                email_domain like '%.ac.%';
+                email_domain like '%.ac.%' or
+                email_domain = 'gmail.com';
 
-  -- Lista de proveedores de correo gratuitos
+  -- Lista de proveedores de correo gratuitos (excluyendo gmail.com que ahora es estudiante)
   is_free_provider := email_domain in (
-    'gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'aol.com', 'icloud.com', 'protonmail.com', 'gmx.com'
+    'hotmail.com', 'outlook.com', 'yahoo.com', 'aol.com', 'icloud.com', 'protonmail.com', 'gmx.com'
   );
 
   -- Lógica de asignación de rol
@@ -382,7 +383,7 @@ begin
   elsif not is_free_provider then
     user_role := 'corporate';
   else
-    -- Si es un proveedor gratuito y no es un dominio .edu, no se asigna rol y no se crea perfil.
+    -- Si es un proveedor gratuito (excepto gmail.com) y no es un dominio .edu, no se asigna rol y no se crea perfil.
     -- El usuario podrá iniciar sesión, pero no tendrá perfil ni acceso a funcionalidades.
     return null;
   end if;

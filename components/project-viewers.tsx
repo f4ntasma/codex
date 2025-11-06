@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Eye, Users, TrendingUp, Clock, UserCheck } from "lucide-react"
 import type { ProjectViewStats } from '@/lib/project-views'
+import { fetchWithAuth } from '@/lib/fetch-with-auth'
 
 interface ProjectViewersProps {
   projectId: number
@@ -26,7 +27,7 @@ export function ProjectViewers({ projectId, isOpen }: ProjectViewersProps) {
   const loadViewStats = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`/api/projects/${projectId}/views`)
+      const response = await fetchWithAuth(`/api/projects/${projectId}/views`)
       if (response.ok) {
         const data = await response.json()
         setStats(data.stats)

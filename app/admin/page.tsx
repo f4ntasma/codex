@@ -32,6 +32,7 @@ import {
   Bell
 } from "lucide-react"
 import type { Project } from '@/lib/types'
+import { fetchWithAuth } from '@/lib/fetch-with-auth'
 
 function AdminPanelContent() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -58,11 +59,12 @@ function AdminPanelContent() {
     featured: false,
     status: 'published' as 'draft' | 'published' | 'archived'
   })
+  const [imageError, setImageError] = useState(false)
 
   // Cargar proyectos
   const loadProjects = async () => {
     try {
-      const response = await fetch('/api/projects?status=all')
+      const response = await fetchWithAuth('/api/projects?status=all')
       
       if (response.ok) {
         const data = await response.json()
@@ -144,6 +146,7 @@ function AdminPanelContent() {
       featured: false,
       status: 'published'
     })
+    setImageError(false)
     setEditingProject(null)
     setShowCreateForm(false)
   }
@@ -162,6 +165,7 @@ function AdminPanelContent() {
       featured: project.featured,
       status: project.status
     })
+    setImageError(false)
     setEditingProject(project)
     setShowCreateForm(true)
   }
@@ -170,7 +174,7 @@ function AdminPanelContent() {
   const handleDelete = async (projectId: number) => {
     if (confirm('¿Estás seguro de que quieres eliminar este proyecto?')) {
       try {
-        const response = await fetch(`/api/projects/${projectId}`, {
+        const response = await fetchWithAuth(`/api/projects/${projectId}`, {
           method: 'DELETE'
         })
 
@@ -415,7 +419,10 @@ function AdminPanelContent() {
                     <Input
                       className="pl-9"
                       value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, image: e.target.value })
+                        setImageError(false)
+                      }}
                       placeholder="https://..."
                     />
                   </div>
@@ -482,43 +489,74 @@ function AdminPanelContent() {
               </div>
             </div>
 
-            {/* Columna derecha: preview */}
+            {/* Columna derecha: preview en tiempo real */}
             <div className="md:col-span-2">
-              <div className="rounded-xl border border-border bg-muted/20 overflow-hidden">
-                <div className="h-36 w-full bg-gradient-to-br from-primary/25 via-accent/25 to-transparent flex items-center justify-center">
-                  {formData.image ? (
-                    // si prefieres <img>, pero Next/Image suele ir aquí en producción
-                    <img
-                      src={formData.image}
-                      alt="preview"
-                      className="h-36 w-full object-cover"
-                      onError={(e) => (e.currentTarget.style.display = 'none')}
-                    />
-                  ) : (
-                    <div className="text-xs text-muted-foreground">Vista previa de imagen</div>
-                  )}
-                </div>
-                <div className="p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{formData.title || 'Título del proyecto'}</h3>
-                    {formData.featured && <Badge variant="secondary">Destacado</Badge>}
-                    <Badge variant="outline" className="capitalize">{formData.status}</Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {formData.description || 'Aquí aparecerá la descripción corta del proyecto.'}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags
-                      .split(',')
-                      .map(t => t.trim())
-                      .filter(Boolean)
-                      .slice(0, 5)
-                      .map((t, i) => (
-                        <Badge key={i} variant="outline" className="rounded-full text-xs">{t}</Badge>
-                      ))
-                    }
-                  </div>
-                </div>
+              <div className="sticky top-8">
+                <Card className="border-2 border-primary/20">
+                  <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Eye className="h-5 w-5 text-primary" />
+                      Vista Previa en Tiempo Real
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      Los cambios se reflejan instantáneamente mientras editas
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="rounded-xl border border-border bg-muted/20 overflow-hidden shadow-lg">
+                      <div className="h-48 w-full bg-gradient-to-br from-primary/25 via-accent/25 to-transparent flex items-center justify-center relative overflow-hidden">
+                        {formData.image && !imageError ? (
+                          <img
+                            src={formData.image}
+                            alt="preview"
+                            className="h-48 w-full object-cover transition-opacity duration-200"
+                            onError={() => setImageError(true)}
+                            onLoad={() => setImageError(false)}
+                          />
+                        ) : (
+                          <div className="text-xs text-muted-foreground flex flex-col items-center gap-2">
+                            <ImageIcon className="h-8 w-8" />
+                            <span>{imageError ? 'Error al cargar imagen' : 'Vista previa de imagen'}</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-lg text-foreground line-clamp-2">
+                            {formData.title || 'Título del proyecto'}
+                          </h3>
+                          <div className="flex gap-1 flex-shrink-0">
+                            {formData.featured && <Badge variant="secondary" className="text-xs">Destacado</Badge>}
+                            <Badge variant="outline" className="capitalize text-xs">{formData.status}</Badge>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {formData.description || 'Aquí aparecerá la descripción corta del proyecto.'}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {formData.tags
+                            .split(',')
+                            .map(t => t.trim())
+                            .filter(Boolean)
+                            .slice(0, 5)
+                            .map((t, i) => (
+                              <Badge key={i} variant="outline" className="rounded-full text-xs">{t}</Badge>
+                            ))
+                          }
+                          {formData.tags.split(',').filter(t => t.trim()).length === 0 && (
+                            <span className="text-xs text-muted-foreground">Agrega tags...</span>
+                          )}
+                        </div>
+                        {formData.author && (
+                          <div className="pt-2 border-t border-border flex items-center gap-2">
+                            <UserIcon className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-foreground">{formData.author}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>

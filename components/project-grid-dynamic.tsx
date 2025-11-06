@@ -10,6 +10,7 @@ import { useSearchDebounce } from '@/lib/hooks/use-debounce'
 import { appConfig } from '@/lib/config'
 import { supabase } from '@/lib/supabase-client'
 import type { Project } from '@/lib/types'
+import { fetchWithAuth } from '@/lib/fetch-with-auth'
 
 interface ProjectGridDynamicProps {
   limit: number | null
@@ -41,26 +42,13 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     setError(null)
     
     try {
-      // Obtener el token de Supabase
-      const { data: { session } } = await supabase.auth.getSession()
-      const accessToken = session?.access_token
-
       const params = new URLSearchParams()
       if (limit) params.append('limit', limit.toString())
       if (showFeaturedOnly) params.append('featured', 'true')
       if (shouldSearch) params.append('search', debouncedSearchTerm)
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-
-      if (accessToken) {
-        headers['Authorization'] = `Bearer ${accessToken}`
-      }
-
-      const response = await fetch(`/api/projects?${params}`, {
-        headers
-      })
+      // Usar fetchWithAuth para asegurar que el token se envía automáticamente
+      const response = await fetchWithAuth(`/api/projects?${params}`)
       
       if (response.ok) {
         const data = await response.json()
@@ -135,11 +123,8 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
   // Dar like a un proyecto (ahora usando ruta pública)
   const handleLike = useCallback(async (projectId: number) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/like`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      const response = await fetchWithAuth(`/api/projects/${projectId}/like`, {
+        method: 'POST'
       })
 
       if (response.ok) {
@@ -180,11 +165,8 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
   // Manejar contratación
   const handleHire = useCallback(async (projectId: number) => {
     try {
-      const response = await fetch(`/api/projects/${projectId}/hire`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+      const response = await fetchWithAuth(`/api/projects/${projectId}/hire`, {
+        method: 'POST'
       })
 
       if (response.ok) {

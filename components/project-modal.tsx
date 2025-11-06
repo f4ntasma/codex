@@ -11,6 +11,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ProjectViewers } from "@/components/project-viewers"
 import type { Project } from '@/lib/types'
+import { fetchWithAuth } from '@/lib/fetch-with-auth'
 
 interface ProjectModalProps {
   project: Project | null
@@ -59,13 +60,13 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
       setShowViewers(false)
       
       if (project?.id) {
-        fetch(`/api/projects/${project.id}/views`, {
+        fetchWithAuth(`/api/projects/${project.id}/views`, {
           method: 'POST'
         }).catch(error => {
           console.error('Error tracking project view:', error)
         })
 
-        fetch(`/api/projects/${project.id}/comments`)
+        fetchWithAuth(`/api/projects/${project.id}/comments`)
           .then(res => res.json())
           .then((data) => setComments(Array.isArray(data?.comments) ? data.comments : []))
           .catch(() => setComments([]))
@@ -77,7 +78,14 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
     if (isOpen) {
       setIsAnimating(true)
       const timer = setTimeout(() => setIsAnimating(false), 300)
-      return () => clearTimeout(timer)
+      // Prevenir scroll del body cuando el modal está abierto
+      document.body.style.overflow = 'hidden'
+      return () => {
+        clearTimeout(timer)
+        document.body.style.overflow = 'unset'
+      }
+    } else {
+      document.body.style.overflow = 'unset'
     }
   }, [isOpen])
 
@@ -94,7 +102,7 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
 
       <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
         isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-      }`}>
+      }`} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
         <Card className={`w-full max-w-4xl max-h-[90vh] bg-background border-border shadow-2xl transition-all duration-300 ${
           isMinimized ? 'h-auto' : 'h-full'
         } ${isAnimating ? 'animate-in zoom-in-95' : ''}`}>
@@ -269,9 +277,8 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
                     if (!project?.id || !newComment.trim()) return
                     setIsSubmitting(true)
                     try {
-                      const res = await fetch(`/api/projects/${project.id}/comments`, {
+                      const res = await fetchWithAuth(`/api/projects/${project.id}/comments`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ content: newComment })
                       })
                       const data = await res.json()

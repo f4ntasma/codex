@@ -25,12 +25,13 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { fetchWithAuth } from "@/lib/fetch-with-auth"
 
 // Memoizamos el Header para evitar que se re-renderice con cada cambio en el formulario
 const MemoizedHeader = memo(Header);
 
 export default function SubirProyectoPage() {
-  // Estados del formulario pe
+  // Estados del formulario
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -47,7 +48,7 @@ export default function SubirProyectoPage() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Agregar tag al proyecto perra xD
+  // Agregar tag al proyecto
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim()) && formData.tags.length < 8) {
       setFormData(prev => ({
@@ -58,7 +59,7 @@ export default function SubirProyectoPage() {
     }
   }
 
-  // Remover tag del proyecto perra xD
+  // Remover tag del proyecto
   const removeTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
@@ -66,7 +67,7 @@ export default function SubirProyectoPage() {
     }))
   }
 
-  // Manejar cambios en inputs perra xD
+  // Manejar cambios en inputs
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -74,14 +75,14 @@ export default function SubirProyectoPage() {
     }))
   }
 
-  // Enviar formulario perra xD
+  // Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      // Validaciones básicas perra xD
+      // Validaciones básicas
       if (!formData.title.trim() || !formData.description.trim() || !formData.author.trim()) {
         throw new Error('Por favor completa todos los campos requeridos')
       }
@@ -94,12 +95,9 @@ export default function SubirProyectoPage() {
         throw new Error('Agrega al menos una tecnología/tag')
       }
 
-      // Enviar a la API perra xD
-      const response = await fetch('/api/projects', {
+      // Enviar a la API con autenticación
+      const response = await fetchWithAuth('/api/projects', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(formData)
       })
 
@@ -113,7 +111,7 @@ export default function SubirProyectoPage() {
       
       setSuccess(true)
       
-      // Limpiar formulario después de 3 segundos perra xD
+      // Limpiar formulario después de 3 segundos
       setTimeout(() => {
         setFormData({
           title: '',
@@ -140,7 +138,7 @@ export default function SubirProyectoPage() {
       <MemoizedHeader />
       
       <main className="container mx-auto px-4 py-8">
-        {/* Header de la página perra xD */}
+        {/* Header de la página */}
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-foreground mb-4">
             Comparte tu Proyecto
@@ -172,7 +170,7 @@ export default function SubirProyectoPage() {
                   </CardHeader>
                   <CardContent className="pt-6">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Título del proyecto perra xD */}
+                    {/* Título del proyecto */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
                         <FileText className="h-4 w-4 inline mr-1" />
@@ -387,7 +385,8 @@ export default function SubirProyectoPage() {
             </div>
 
             {/* Columna derecha: Vista previa en tiempo real */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2">
+              <div className="space-y-6">
               {/* Vista previa de la tarjeta */}
               <Card className="sticky top-8">
                 <CardHeader>
@@ -505,65 +504,67 @@ export default function SubirProyectoPage() {
 
               {/* Panel lateral con información */}
               <div className="space-y-6">
-              {/* Consejos */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">💡 Consejos</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm">
-                  <div>
-                    <strong>Título claro:</strong> Usa un nombre descriptivo que explique qué hace tu proyecto.
-                  </div>
-                  <div>
-                    <strong>Descripción detallada:</strong> Explica el problema que resuelve y cómo funciona.
-                  </div>
-                  <div>
-                    <strong>Tecnologías:</strong> Menciona las herramientas y lenguajes que usaste.
-                  </div>
-                  <div>
-                    <strong>Enlaces:</strong> Incluye GitHub para que otros puedan ver el código.
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Consejos */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">💡 Consejos</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm">
+                    <div>
+                      <strong>Título claro:</strong> Usa un nombre descriptivo que explique qué hace tu proyecto.
+                    </div>
+                    <div>
+                      <strong>Descripción detallada:</strong> Explica el problema que resuelve y cómo funciona.
+                    </div>
+                    <div>
+                      <strong>Tecnologías:</strong> Menciona las herramientas y lenguajes que usaste.
+                    </div>
+                    <div>
+                      <strong>Enlaces:</strong> Incluye GitHub para que otros puedan ver el código.
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Estadísticas */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">📊 Comunidad</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Proyectos totales:</span>
-                    <span className="font-medium">500+</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Estudiantes activos:</span>
-                    <span className="font-medium">1,200+</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Universidades:</span>
-                    <span className="font-medium">25+</span>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Estadísticas */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">📊 Comunidad</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Proyectos totales:</span>
+                      <span className="font-medium">500+</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Estudiantes activos:</span>
+                      <span className="font-medium">1,200+</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Universidades:</span>
+                      <span className="font-medium">25+</span>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Navegación */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">🔗 Enlaces Útiles</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Link href="/" className="block text-sm text-primary hover:underline">
-                    Ver todos los proyectos
-                  </Link>
-                  <Link href="/proyectos" className="block text-sm text-primary hover:underline">
-                    Explorar por categorías
-                  </Link>
-                  <Link href="#" className="block text-sm text-primary hover:underline">
-                    Guía para estudiantes
-                  </Link>
-                </CardContent>
-              </Card>
+                {/* Navegación */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">🔗 Enlaces Útiles</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <Link href="/" className="block text-sm text-primary hover:underline">
+                      Ver todos los proyectos
+                    </Link>
+                    <Link href="/proyectos" className="block text-sm text-primary hover:underline">
+                      Explorar por categorías
+                    </Link>
+                    <Link href="#" className="block text-sm text-primary hover:underline">
+                      Guía para estudiantes
+                    </Link>
+                  </CardContent>
+                </Card>
+              </div>
+              </div>
             </div>
           </div>
         </div>

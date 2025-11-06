@@ -44,7 +44,28 @@ export function getSupabaseAccessToken(request: NextRequest): string | null {
     if (cookie.name.includes('sb-') && cookie.name.includes('-auth-token')) {
       try {
         const cookieValue = JSON.parse(cookie.value)
-        return cookieValue.access_token || cookieValue || null
+        // El token puede estar en diferentes ubicaciones
+        return cookieValue.access_token || cookieValue.accessToken || cookieValue.token || cookieValue || null
+      } catch {
+        // Si no es JSON, puede ser el token directamente
+        return cookie.value || null
+      }
+    }
+  }
+
+  // Buscar también cookies alternativas de Supabase (pueden variar según la configuración)
+  const altCookieNames = [
+    'supabase-auth-token',
+    'sb-access-token',
+    'sb-refresh-token'
+  ]
+  
+  for (const cookieName of altCookieNames) {
+    const cookie = request.cookies.get(cookieName)
+    if (cookie?.value) {
+      try {
+        const cookieValue = JSON.parse(cookie.value)
+        return cookieValue.access_token || cookieValue.accessToken || cookieValue.token || null
       } catch {
         return cookie.value || null
       }
