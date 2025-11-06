@@ -6,6 +6,7 @@ import Image from "next/image"
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Code2, Upload, LogOut, User } from "lucide-react"
+import { supabase } from '@/lib/supabase-client'
 
 interface User {
   id: string
@@ -23,12 +24,29 @@ export function Header() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-        if (response.ok) {
-          const data = await response.json()
-          setUser(data.user)
+        // Verificar sesión de Supabase
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session) {
+          // Obtener perfil del usuario directamente desde Supabase
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+
+          if (!error && profile) {
+            setUser({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name,
+              role: profile.role,
+              avatar: profile.avatar || undefined
+            })
+          }
         }
       } catch (error) {
+        // Silenciar errores - el usuario simplemente no está autenticado
         console.error('Auth check failed:', error)
       } finally {
         setLoading(false)
@@ -36,11 +54,24 @@ export function Header() {
     }
     
     checkAuth()
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        checkAuth()
+      } else {
+        setUser(null)
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await supabase.auth.signOut()
       setUser(null)
       router.push('/login')
     } catch (error) {

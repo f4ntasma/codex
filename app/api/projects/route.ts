@@ -1,23 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { requireAdmin } from '@/lib/auth-middleware'
+import { getAuthenticatedUser, createSupabaseServerClient } from '@/lib/supabase-server'
 import { appConfig } from '@/lib/config'
 import type { ProjectInsert } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 
-// GET - Obtener todos los proyectos (ruta pública)
+// GET - Obtener todos los proyectos (requiere autenticación)
 export async function GET(request: NextRequest) {
+  // Verificar autenticación usando Supabase
+  const user = await getAuthenticatedUser(request)
+  
+  if (!user) {
+    return NextResponse.json(
+      { error: 'No autenticado. Debes iniciar sesión para ver los proyectos.' },
+      { status: 401 }
+    )
+  }
+
   try {
+    // Usar el cliente con el token del usuario para respetar RLS
+    const supabase = createSupabaseServerClient(request)
+    
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get('limit')
     const featured = searchParams.get('featured')
     const search = searchParams.get('search')
     const status = searchParams.get('status') || 'published'
 
-    // Si hay un término de búsqueda, usar la función de búsqueda de texto completo (mucho más rápida)
+    // Si hay un término de búsqueda, usar la función de búsqueda de texto completo
     if (search && search.length >= 2) {
-      let query = supabaseAdmin
+      let query = supabase
         .rpc('search_projects', { search_term: search })
         .order('stars', { ascending: false })
 
@@ -38,7 +52,7 @@ export async function GET(request: NextRequest) {
     }
 
     // --- Consulta normal si no hay búsqueda ---
-    let query = supabaseAdmin.from('projects').select('*').order('stars', { ascending: false })
+    let query = supabase.from('projects').select('*').order('stars', { ascending: false })
 
     if (status !== 'all') query = query.eq('status', status)
     if (featured === 'true') query = query.eq('featured', true)
@@ -81,10 +95,19 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Crear nuevo proyecto (PÚBLICO - cualquiera puede subir proyectos)
+// POST - Crear nuevo proyecto (requiere autenticación)
 export async function POST(request: NextRequest) {
+  // Verificar autenticación usando Supabase
+  const user = await getAuthenticatedUser(request)
+  
+  if (!user) {
+    return NextResponse.json(
+      { error: 'No autenticado. Debes iniciar sesión para subir proyectos.' },
+      { status: 401 }
+    )
+  }
+
   try {
-    // Ya no requiere autenticación - cualquier usuario puede subir proyectos
 
     const body = await request.json()
     

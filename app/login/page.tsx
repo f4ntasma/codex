@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -59,22 +59,49 @@ function LoginPageContent() {
 
   useEffect(() => setMode(tabParam), [tabParam])
 
-  // ¿ya está autenticado?
+  const redirectUser = useCallback((role: string) => {
+    switch (role) {
+      case 'student': 
+        router.push('/students')
+        break
+      case 'corporate': 
+        router.push('/proyectos')
+        break
+      case 'admin': 
+        router.push('/admin')
+        break
+      default: 
+        // Si no hay rol definido, ir a students por defecto
+        router.push('/students')
+    }
+  }, [router])
+
+  // ¿ya está autenticado? Solo verificar si no hay un login en proceso
   useEffect(() => {
+    if (loading) return // No verificar si ya hay un login en proceso
+    
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me')
-        if (response.ok) {
-          const userData = await response.json()
-          setIsAuthenticated(true)
-          redirectUser(userData.user.role)
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          // Obtener perfil directamente desde Supabase
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+          
+          if (profile) {
+            setIsAuthenticated(true)
+            redirectUser(profile.role)
+          }
         }
       } catch {
         // no-op
       }
     }
     checkAuth()
-  }, [])
+  }, [loading, redirectUser])
 
   const userRoles: UserRole[] = [
     {
@@ -98,15 +125,6 @@ function LoginPageContent() {
     setError(null)
   }
 
-  const redirectUser = (role: string) => {
-    switch (role) {
-      case 'student': router.push('/students'); break
-      case 'corporate': router.push('/proyectos'); break
-      case 'admin': router.push('/admin'); break
-      default: router.push('/')
-    }
-  }
-
   // ---------- LOGIN ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -116,16 +134,33 @@ function LoginPageContent() {
       if (!formData.email || !formData.password)
         throw new Error('Por favor completa todos los campos')
 
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      // Login directo con Supabase en el cliente
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email.trim(),
+        password: formData.password,
       })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || 'Error al iniciar sesión')
+
+      if (error || !data.user) {
+        throw new Error(error?.message || 'Credenciales inválidas')
+      }
+
+      // Verificar que la sesión esté disponible (Supabase ya la establece inmediatamente)
+      const { data: { session: newSession } } = await supabase.auth.getSession()
+      if (!newSession) {
+        throw new Error('Error al establecer la sesión')
+      }
+
+      // Obtener el perfil para saber el rol
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
 
       setIsAuthenticated(true)
-      redirectUser(data.user.role)
+      
+      // Redirigir inmediatamente (la sesión ya está establecida)
+      redirectUser(profile?.role || 'student')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       setError(msg)
