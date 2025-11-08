@@ -95,18 +95,8 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Crear nuevo proyecto (requiere autenticación)
+// POST - Crear nuevo proyecto (público, no requiere autenticación)
 export async function POST(request: NextRequest) {
-  // Verificar autenticación usando Supabase
-  const user = await getAuthenticatedUser(request)
-  
-  if (!user) {
-    return NextResponse.json(
-      { error: 'No autenticado. Debes iniciar sesión para subir proyectos.' },
-      { status: 401 }
-    )
-  }
-
   try {
 
     const body = await request.json()
@@ -152,25 +142,5 @@ export async function POST(request: NextRequest) {
           details: process.env.NODE_ENV === 'development' ? error.message : undefined
         },
         { status: 500 }
-      )
-    }
-
-    // Log de auditoría para proyectos públicos
-    console.log(`Proyecto público creado por: ${data.author} - ${data.title}`)
-
-    return NextResponse.json({
-      project: data,
-      message: 'Proyecto subido exitosamente. ¡Gracias por compartir tu trabajo!',
-      timestamp: new Date().toISOString()
-    }, { status: 201 })
-  } catch (error) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json(
-      { 
-        error: 'Error interno del servidor',
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
-      },
-      { status: 500 }
-    )
+    })
   }
-}

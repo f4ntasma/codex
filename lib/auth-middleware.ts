@@ -30,6 +30,16 @@ export function requireCorporate(request: NextRequest): User | null {
 }
 
 export function requireAdmin(request: NextRequest): User | null {
+  // Solución temporal para desarrollo: permitir acceso con admin_token
+  const adminToken = request.headers.get('authorization')?.substring(7)
+  if (process.env.NODE_ENV === 'development' && adminToken === authConfig.adminToken) {
+    return {
+      id: 'admin-dev-user',
+      email: 'admin@dev.com',
+      name: 'Admin (Dev)',
+      role: 'admin'
+    }
+  }
   return requireRole(request, ['admin'])
 }
 
