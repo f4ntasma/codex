@@ -278,6 +278,7 @@ export default function SubirProyectoPage() {
                         />
                       </div>
                     </div>
+                    
 
                     {/* Tags/Tecnologías */}
                     <div>
@@ -567,6 +568,7 @@ export default function SubirProyectoPage() {
             </div>
           </div>
         </div>
+      </div>
       </main>
     </div>
   )

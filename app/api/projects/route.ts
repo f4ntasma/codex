@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
-import { requireAdmin } from '@/lib/auth-middleware'
 import { getAuthenticatedUser, createSupabaseServerClient } from '@/lib/supabase-server'
 import { appConfig } from '@/lib/config'
 import type { ProjectInsert } from '@/lib/types'
@@ -9,9 +8,8 @@ export const dynamic = 'force-dynamic'
 
 // GET - Obtener todos los proyectos (requiere autenticación)
 export async function GET(request: NextRequest) {
-  // Verificar autenticación usando Supabase
   const user = await getAuthenticatedUser(request)
-  
+
   if (!user) {
     return NextResponse.json(
       { error: 'No autenticado. Debes iniciar sesión para ver los proyectos.' },
@@ -20,29 +18,27 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Usar el cliente con el token del usuario para respetar RLS
     const supabase = createSupabaseServerClient(request)
-    
     const { searchParams } = new URL(request.url)
     const limit = searchParams.get('limit')
     const featured = searchParams.get('featured')
     const search = searchParams.get('search')
     const status = searchParams.get('status') || 'published'
 
-    // Si hay un término de búsqueda, usar la función de búsqueda de texto completo
+    // Si hay búsqueda de texto completo
     if (search && search.length >= 2) {
-      let query = supabase
+      let searchQuery = supabase
         .rpc('search_projects', { search_term: search })
         .order('stars', { ascending: false })
 
       if (limit) {
         const limitNum = Math.min(parseInt(limit), appConfig.pagination.maxLimit)
-        query = query.limit(limitNum)
+        searchQuery = searchQuery.limit(limitNum)
       }
 
-      const { data, error } = await query
+      const { data, error } = await searchQuery
       if (error) throw error
-      
+
       return NextResponse.json({
         projects: data,
         count: data?.length || 0,
@@ -51,13 +47,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // --- Consulta normal si no hay búsqueda ---
+    // Consulta normal
     let query = supabase.from('projects').select('*').order('stars', { ascending: false })
 
     if (status !== 'all') query = query.eq('status', status)
     if (featured === 'true') query = query.eq('featured', true)
 
-    // Aplicar límite con validación
     if (limit) {
       const limitNum = Math.min(parseInt(limit), appConfig.pagination.maxLimit)
       query = query.limit(limitNum)
@@ -76,7 +71,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Agregar metadatos útiles a la respuesta
     return NextResponse.json({
       projects: data,
       count: data?.length || 0,
@@ -98,10 +92,8 @@ export async function GET(request: NextRequest) {
 // POST - Crear nuevo proyecto (público, no requiere autenticación)
 export async function POST(request: NextRequest) {
   try {
-
     const body = await request.json()
-    
-    // Validar datos requeridos
+
     if (!body.title || !body.description || !body.author) {
       return NextResponse.json(
         { 
@@ -112,20 +104,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Preparar datos del proyecto con valores por defecto
-    // Los proyectos públicos siempre empiezan como 'published' y no destacados
     const projectData: ProjectInsert = {
       title: body.title.trim(),
       description: body.description.trim(),
       author: body.author.trim(),
       author_avatar: body.author_avatar || appConfig.logos.placeholder,
       tags: Array.isArray(body.tags) ? body.tags : [],
-      stars: 0, // Los proyectos nuevos empiezan con 0 stars
+      stars: 0,
       image: body.image || appConfig.logos.placeholder,
       github_url: body.github_url || null,
       demo_url: body.demo_url || null,
-      featured: false, // Solo los admins pueden marcar como destacado
-      status: 'published' // Los proyectos públicos se publican automáticamente
+      featured: false,
+      status: 'published'
     }
 
     const { data, error } = await supabaseAdmin
@@ -142,5 +132,24 @@ export async function POST(request: NextRequest) {
           details: process.env.NODE_ENV === 'development' ? error.message : undefined
         },
         { status: 500 }
-    })
+      )
+    }
+
+    return NextResponse.json(
+      { 
+        message: 'Proyecto creado con éxito',
+        project: data 
+      },
+      { status: 201 }
+    )
+  } catch (error) {
+    console.error('Unexpected error creating project:', error)
+    return NextResponse.json(
+      { 
+        error: 'Error interno del servidor al crear proyecto',
+        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+      },
+      { status: 500 }
+    )
   }
+}
