@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Header } from "@/components/header"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Header } from '@/components/header'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import {
   Mail,
   Lock,
@@ -17,7 +17,7 @@ import {
   AlertCircle,
   GraduationCap,
   Building2,
-} from "lucide-react"
+} from 'lucide-react'
 import PillNav from '@/components/PillNav'
 import { supabase } from '@/lib/supabase-client'
 
@@ -46,6 +46,9 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [needsRoleSelection, setNeedsRoleSelection] = useState(false)
+  const [pendingUser, setPendingUser] = useState<{ id: string; email: string; name?: string } | null>(null)
+  const [selectedRole, setSelectedRole] = useState<'student' | 'corporate'>('student')
 
   const [formData, setFormData] = useState<LoginFormData>({ email: '', password: '' })
   const [sname, setSName] = useState('')
@@ -59,49 +62,85 @@ function LoginPageContent() {
 
   useEffect(() => setMode(tabParam), [tabParam])
 
-  const redirectUser = useCallback((role: string) => {
-    switch (role) {
-      case 'student': 
-        router.push('/students')
-        break
-      case 'corporate': 
-        router.push('/proyectos')
-        break
-      case 'admin': 
-        router.push('/admin')
-        break
-      default: 
-        // Si no hay rol definido, ir a students por defecto
-        router.push('/students')
+  const redirectUser = useCallback(
+    (role: string) => {
+      switch (role) {
+        case 'student':
+          router.push('/students')
+          break
+        case 'corporate':
+          router.push('/proyectos')
+          break
+        case 'admin':
+          router.push('/admin')
+          break
+        default:
+          router.push('/students')
+      }
+    },
+    [router]
+  )
+
+  const fetchOrCreateProfile = useCallback(async (userId: string, email: string, name?: string) => {
+    try {
+      const { data: existing } = await supabase
+        .from('profiles')
+        .select('id, email, name, role')
+        .eq('id', userId)
+        .single()
+
+      if (existing) return existing
+
+      const fallbackName = name || email?.split('@')[0] || 'Usuario'
+      const { data: created, error: insertError } = await supabase
+        .from('profiles')
+        .insert([{ id: userId, email, name: fallbackName, role: null }])
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+      return created
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo obtener el perfil'
+      throw new Error(msg)
     }
-  }, [router])
+  }, [])
+
+  const handlePostAuth = useCallback(
+    async (user: any) => {
+      const email = user?.email || ''
+      const displayName = user?.user_metadata?.name || email.split('@')[0] || 'Usuario'
+
+      const profile = await fetchOrCreateProfile(user.id, email, displayName)
+
+      if (!profile?.role) {
+        setPendingUser({ id: profile.id, email: profile.email, name: profile.name })
+        setNeedsRoleSelection(true)
+        return
+      }
+
+      setIsAuthenticated(true)
+      redirectUser(profile.role)
+    },
+    [fetchOrCreateProfile, redirectUser]
+  )
 
   // ¿ya está autenticado? Solo verificar si no hay un login en proceso
   useEffect(() => {
-    if (loading) return // No verificar si ya hay un login en proceso
-    
+    if (loading || needsRoleSelection) return
+
     const checkAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          // Obtener perfil directamente desde Supabase
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single()
-          
-          if (profile) {
-            setIsAuthenticated(true)
-            redirectUser(profile.role)
-          }
+        if (session?.user) {
+          await handlePostAuth(session.user)
         }
       } catch {
         // no-op
       }
     }
     checkAuth()
-  }, [loading, redirectUser])
+  }, [loading, needsRoleSelection, handlePostAuth])
 
   const userRoles: UserRole[] = [
     {
@@ -125,16 +164,35 @@ function LoginPageContent() {
     setError(null)
   }
 
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login?tab=login` : undefined,
+        },
+      })
+
+      if (error) throw error
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo iniciar sesión con Google'
+      setError(msg)
+      setLoading(false)
+    }
+  }
+
   // ---------- LOGIN ----------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
 
     try {
-      if (!formData.email || !formData.password)
-        throw new Error('Por favor completa todos los campos')
+      if (!formData.email || !formData.password) throw new Error('Por favor completa todos los campos')
 
-      // Login directo con Supabase en el cliente
+      // Login directo con Supabase en el cliente (correo y contraseña)
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
         password: formData.password,
@@ -144,23 +202,15 @@ function LoginPageContent() {
         throw new Error(error?.message || 'Credenciales inválidas')
       }
 
-      // Verificar que la sesión esté disponible (Supabase ya la establece inmediatamente)
-      const { data: { session: newSession } } = await supabase.auth.getSession()
+      // Verificar que la sesión está disponible (Supabase ya la establece inmediatamente)
+      const {
+        data: { session: newSession },
+      } = await supabase.auth.getSession()
       if (!newSession) {
         throw new Error('Error al establecer la sesión')
       }
 
-      // Obtener el perfil para saber el rol
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single()
-
-      setIsAuthenticated(true)
-      
-      // Redirigir inmediatamente (la sesión ya está establecida)
-      redirectUser(profile?.role || 'student')
+      await handlePostAuth(data.user)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error desconocido'
       setError(msg)
@@ -172,29 +222,59 @@ function LoginPageContent() {
   // ---------- SIGNUP ----------
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
 
     try {
-      // Solo permitir correos .edu
-      if (!semail.endsWith('.edu')) {
-        throw new Error('Solo se permiten correos institucionales que terminen en .edu')
+      if (!semail.toLowerCase().endsWith('@gmail.com')) {
+        throw new Error('Usa un correo de Gmail para registrarte')
       }
 
-      // Crear cuenta en Supabase con rol "student"
+      // Crear cuenta en Supabase
       const { error } = await supabase.auth.signUp({
         email: semail.trim(),
         password: spass,
         options: {
-          data: { role: 'student', name: sname },
+          data: { name: sname },
           emailRedirectTo: `${location.origin}/auth/callback`,
         },
       })
       if (error) throw error
 
-      alert('Cuenta creada exitosamente. Por favor verifica tu correo e inicia sesión.')
+      alert('Cuenta creada exitosamente. Revisa tu correo de Gmail para validar e inicia sesión.')
       router.push('/login?tab=login')
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'No se pudo crear la cuenta'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSaveRole = async () => {
+    if (!pendingUser) return
+    setLoading(true)
+    setError(null)
+
+    try {
+      const fallbackName = pendingUser.name || pendingUser.email.split('@')[0] || 'Usuario'
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: pendingUser.id,
+          email: pendingUser.email,
+          name: fallbackName,
+          role: selectedRole,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      setIsAuthenticated(true)
+      redirectUser(selectedRole)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'No se pudo guardar tu rol'
       setError(msg)
     } finally {
       setLoading(false)
@@ -213,6 +293,64 @@ function LoginPageContent() {
     )
   }
 
+  if (needsRoleSelection && pendingUser) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-10">
+          <div className="max-w-3xl mx-auto">
+            <Card>
+              <CardHeader>
+                <CardTitle>Elige tu rol</CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Tu cuenta de Gmail/Google se creó. Selecciona cómo quieres usar la plataforma.
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {userRoles.map(role => (
+                    <button
+                      key={role.role}
+                      type="button"
+                      onClick={() => setSelectedRole(role.role)}
+                      className={`text-left p-4 rounded-lg border transition-all ${
+                        selectedRole === role.role ? 'border-primary bg-primary/10 shadow-sm' : 'border-border hover:border-primary/50'
+                      }`}
+                      disabled={loading}
+                    >
+                      <div className={`inline-flex p-2 rounded-full ${role.color} text-white mb-3`}>{role.icon}</div>
+                      <h3 className="font-semibold text-foreground">{role.title}</h3>
+                      <p className="text-sm text-muted-foreground">{role.description}</p>
+                    </button>
+                  ))}
+                </div>
+
+                {error && (
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                      <p className="text-destructive text-sm">{error}</p>
+                    </div>
+                  </div>
+                )}
+
+                <Button className="w-full" onClick={handleSaveRole} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Guardando rol...
+                    </>
+                  ) : (
+                    'Guardar y continuar'
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -220,18 +358,14 @@ function LoginPageContent() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-6 mt-5">
             <h1 className="text-4xl font-bold text-foreground mb-0 mt-0">Bienvenido a Syma</h1>
-            <p className="text-lg text-muted-foreground">
-              Conecta estudiantes talentosos con oportunidades empresariales
-            </p>
+            <p className="text-lg text-muted-foreground">Conecta estudiantes talentosos con oportunidades empresariales</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pb-4 mb-8">
             {/* Card izquierda: Login / Registro */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="w-full h-full">
-                  {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
-                </CardTitle>
+                <CardTitle className="w-full h-full">{mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}</CardTitle>
                 <div className="relative mt-3">
                   <div className="relative h-[64px]">
                     <PillNav
@@ -260,13 +394,13 @@ function LoginPageContent() {
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">
                         <Mail className="h-4 w-4 inline mr-1" />
-                        Correo Electrónico
+                        Correo de Gmail
                       </label>
                       <Input
                         type="email"
                         value={formData.email}
-                        onChange={(e) => handleInputChange('email', e.target.value)}
-                        placeholder="pepe@universidad.edu"
+                        onChange={e => handleInputChange('email', e.target.value)}
+                        placeholder="tu.nombre@gmail.com"
                         required
                         className="w-full"
                       />
@@ -281,7 +415,7 @@ function LoginPageContent() {
                         <Input
                           type={showPassword ? 'text' : 'password'}
                           value={formData.password}
-                          onChange={(e) => handleInputChange('password', e.target.value)}
+                          onChange={e => handleInputChange('password', e.target.value)}
                           placeholder="Tu contraseña"
                           required
                           className="w-full pr-10"
@@ -307,9 +441,27 @@ function LoginPageContent() {
                       </div>
                     )}
 
-                    <Button type="submit" className="w-full gap-2" disabled={loading}>
-                      {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Iniciando sesión...</>) : 'Iniciar Sesión'}
-                    </Button>
+                    <div className="space-y-2">
+                      <Button type="submit" className="w-full gap-2" disabled={loading}>
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> Iniciando sesión...
+                          </>
+                        ) : (
+                          'Iniciar sesión con correo'
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={handleGoogleLogin}
+                        disabled={loading}
+                      >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Ingresar con
+                        Google
+                      </Button>
+                    </div>
                   </form>
                 )}
 
@@ -322,13 +474,13 @@ function LoginPageContent() {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Email institucional (.edu)</label>
+                      <label className="text-sm font-medium">Correo de Gmail</label>
                       <Input
                         type="email"
                         value={semail}
                         onChange={e => setSEmail(e.target.value)}
                         required
-                        placeholder="ejemplo@universidad.edu"
+                        placeholder="tu.nombre@gmail.com"
                       />
                     </div>
 
@@ -353,7 +505,13 @@ function LoginPageContent() {
                     )}
 
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {loading ? (<><Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta...</>) : 'Crear cuenta'}
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta...
+                        </>
+                      ) : (
+                        'Crear cuenta'
+                      )}
                     </Button>
                   </form>
                 )}
@@ -364,35 +522,36 @@ function LoginPageContent() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Tipos de Usuario</CardTitle>
+                  <CardTitle>Tipos de usuario</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {userRoles.map((role) => (
+                  {userRoles.map(role => (
                     <div key={role.role} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                      <div className={`p-2 rounded-full ${role.color} text-white`}>
-                        {role.icon}
-                      </div>
+                      <div className={`p-2 rounded-full ${role.color} text-white`}>{role.icon}</div>
                       <div>
                         <h3 className="font-semibold text-foreground">{role.title}</h3>
                         <p className="text-sm text-muted-foreground">{role.description}</p>
                       </div>
                     </div>
                   ))}
+                  <div className="text-sm text-muted-foreground">
+                    Elige si eres estudiante o empresa después de iniciar sesión. Puedes cambiarlo luego desde tu perfil.
+                  </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Requisitos de Acceso</CardTitle>
+                  <CardTitle>Formas de acceso</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Estudiantes</Badge>
-                    <span className="text-sm text-muted-foreground">Correo institucional (university.edu)</span>
+                    <Badge variant="secondary">Correo</Badge>
+                    <span className="text-sm text-muted-foreground">Usa tu correo @gmail.com y tu contraseña</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">Empresas</Badge>
-                    <span className="text-sm text-muted-foreground">Correo de empresa (.corporate)</span>
+                    <Badge variant="secondary">Google</Badge>
+                    <span className="text-sm text-muted-foreground">Inicia sesión directamente con tu cuenta de Google</span>
                   </div>
                 </CardContent>
               </Card>
@@ -406,14 +565,16 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Cargando...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <LoginPageContent />
     </Suspense>
   )

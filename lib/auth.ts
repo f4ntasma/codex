@@ -66,35 +66,9 @@ export function getUserFromRequest(request: NextRequest): User | null {
   }
 }
 
-export function isStudentEmail(email: string): boolean {
-  const studentDomains = [
-    'edu.co',
-    'university.edu',
-    'estudiantes.edu',
-    'student.edu'
-  ]
-  
-  const domain = email.split('@')[1]?.toLowerCase()
-  return studentDomains.some(studentDomain => domain?.includes(studentDomain)) || 
-         domain?.includes('.edu')
-}
-
-export function isCorporateEmail(email: string): boolean {
-  const corporateDomains = [
-    'intercorp.com',
-    'intercorp.pe',
-    'corporate.com',
-    'company.com'
-  ]
-  
-  const domain = email.split('@')[1]?.toLowerCase()
-  return corporateDomains.some(corpDomain => domain?.includes(corpDomain))
-}
-
 export function determineUserRole(email: string): User['role'] {
-  if (isStudentEmail(email)) return 'student'
-  if (isCorporateEmail(email)) return 'corporate'
-  return 'student' // Default role
+  // Default role now user-provided after login
+  return 'student'
 }
 
 export const authConfig = {

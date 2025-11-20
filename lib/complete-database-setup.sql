@@ -359,33 +359,13 @@ declare
   user_role text;
   user_email text;
   email_domain text;
-  is_student boolean;
-  is_free_provider boolean;
 begin
   -- Obtener el email del nuevo usuario
   user_email := new.email;
   email_domain := split_part(user_email, '@', 2);
 
-  -- Lista de dominios educativos (puedes expandirla)
-  is_student := email_domain like '%.edu' or
-                email_domain like '%.edu.%' or
-                email_domain like '%.ac.%';
-
-  -- Lista de proveedores de correo gratuitos
-  is_free_provider := email_domain in (
-    'gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'aol.com', 'icloud.com', 'protonmail.com', 'gmx.com'
-  );
-
-  -- Lógica de asignación de rol
-  if is_student then
-    user_role := 'student';
-  elsif not is_free_provider then
-    user_role := 'corporate';
-  else
-    -- Si es un proveedor gratuito y no es un dominio .edu, no se asigna rol y no se crea perfil.
-    -- El usuario podrá iniciar sesión, pero no tendrá perfil ni acceso a funcionalidades.
-    return null;
-  end if;
+  -- El rol ahora se elige dentro de la app; por defecto asignamos 'student'
+  user_role := coalesce(new.raw_user_meta_data->>'role', 'student');
 
   -- Insertar en la tabla de perfiles con el rol asignado
   insert into public.profiles (id, email, name, role)
