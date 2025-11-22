@@ -1,15 +1,28 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Star, ExternalLink, Github, Eye, X, Minimize2, Maximize2, Calendar, User, Users, Briefcase } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import Image from "next/image"
-import Link from "next/link"
-import { ProjectViewers } from "@/components/project-viewers"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Star,
+  ExternalLink,
+  Github,
+  Eye,
+  X,
+  Minimize2,
+  Maximize2,
+  Calendar,
+  User,
+  Users,
+  Briefcase,
+  MessageSquare,
+} from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import Image from 'next/image'
+import Link from 'next/link'
+import { ProjectViewers } from '@/components/project-viewers'
 import type { Project } from '@/lib/types'
 
 interface ProjectModalProps {
@@ -25,18 +38,17 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
   const [isMinimized, setIsMinimized] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [showViewers, setShowViewers] = useState(false)
-  const [comments, setComments] = useState<{ id: number; project_id: number; author: string | null; content: string; created_at: string }[]>([])
-  const [newComment, setNewComment] = useState("")
+  const [showCommentsSection, setShowCommentsSection] = useState(true)
+  const [comments, setComments] = useState<
+    { id: number; project_id: number; author: string | null; content: string; created_at: string }[]
+  >([])
+  const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleLike = () => {
     if (onLike && project) {
       onLike(project.id)
     }
-  }
-
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized)
   }
 
   const handleHire = () => {
@@ -49,7 +61,7 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -57,17 +69,14 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
     if (isOpen) {
       setIsMinimized(false)
       setShowViewers(false)
-      
+      setShowCommentsSection(true)
+
       if (project?.id) {
-        fetch(`/api/projects/${project.id}/views`, {
-          method: 'POST'
-        }).catch(error => {
-          console.error('Error tracking project view:', error)
-        })
+        fetch(`/api/projects/${project.id}/views`, { method: 'POST' }).catch(() => null)
 
         fetch(`/api/projects/${project.id}/comments`)
           .then(res => res.json())
-          .then((data) => setComments(Array.isArray(data?.comments) ? data.comments : []))
+          .then(data => setComments(Array.isArray(data?.comments) ? data.comments : []))
           .catch(() => setComments([]))
       }
     }
@@ -85,24 +94,28 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
 
   return (
     <>
-      <div 
+      <div
         className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={onClose}
       />
 
-      <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
-        isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-      }`}>
-        <Card className={`w-full max-w-4xl max-h-[90vh] bg-background border-border shadow-2xl transition-all duration-300 ${
-          isMinimized ? 'h-auto' : 'h-full'
-        } ${isAnimating ? 'animate-in zoom-in-95' : ''}`}>
+      <div
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+          isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
+        <Card
+          className={`w-full max-w-5xl max-h-[90vh] border-border shadow-2xl transition-all duration-300 ${
+            isMinimized ? 'h-auto' : 'h-full'
+          } ${isAnimating ? 'animate-in zoom-in-95' : ''}`}
+        >
           <CardHeader className="border-b border-border p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={project.author_avatar || "/placeholder.svg"} alt={project.author} />
+                  <AvatarImage src={project.author_avatar || '/placeholder.svg'} alt={project.author} />
                   <AvatarFallback>{project.author[0]}</AvatarFallback>
                 </Avatar>
                 <div>
@@ -137,21 +150,11 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
                   </Button>
                 )}
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={toggleMinimize}
-                  className="h-8 w-8 p-0"
-                >
+                <Button size="sm" variant="ghost" onClick={() => setIsMinimized(!isMinimized)} className="h-8 w-8 p-0">
                   {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
                 </Button>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onClose}
-                  className="h-8 w-8 p-0 hover:bg-destructive/10"
-                >
+                <Button size="sm" variant="ghost" onClick={onClose} className="h-8 w-8 p-0 hover:bg-destructive/10">
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -159,142 +162,222 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
           </CardHeader>
 
           {!isMinimized && (
-            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-              <div className="space-y-6">
-                <div className="relative h-64 md:h-80 rounded-lg overflow-hidden bg-muted">
-                  <Image
-                    src={project.image || "/placeholder.svg"}
-                    alt={project.title}
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+            <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-80px)] space-y-6">
+              <div className="rounded-3xl border border-[#f0dca3] bg-[#fff7d6] p-4 shadow-sm">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 rounded-2xl border border-[#7bb8f2] bg-[#bfe0ff] px-4 py-3 shadow-inner">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">Titulo</span>
+                      <span className="text-lg font-bold text-slate-900 line-clamp-1">{project.title}</span>
+                    </div>
+                    <div className="ml-auto flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleLike}
+                        className="h-10 w-10 rounded-full bg-white/70 hover:bg-white border border-[#7bb8f2] shadow-sm"
+                      >
+                        <Star className="h-4 w-4 fill-[#7bb8f2] text-[#4f94d9]" />
+                        <span className="sr-only">Like</span>
+                      </Button>
+                      <span className="text-sm font-semibold text-slate-700">{project.stars}</span>
+                    </div>
+                  </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {project.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-sm">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Descripción</h3>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                    {project.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-foreground">Información del Proyecto</h4>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4" />
-                        <span>Creado: {formatDate(project.created_at)}</span>
+                  <div className="grid gap-4 lg:grid-cols-[1.25fr,1fr]">
+                    <div className="relative rounded-3xl border border-[#7bb8f2] bg-[#bfe0ff] p-3 shadow-inner min-h-[320px]">
+                      <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl border border-[#7bb8f2] bg-white">
+                        <Image
+                          src={project.image || '/placeholder.svg'}
+                          alt={project.title}
+                          fill
+                          className="object-cover"
+                          priority
+                        />
                       </div>
-                      {project.updated_at !== project.created_at && (
-                        <div className="flex items-center gap-2">
+                      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                        <div className="flex h-9 items-center rounded-full bg-white/80 px-3 text-sm font-semibold text-slate-700 border border-[#7bb8f2] shadow-sm">
+                          <Eye className="mr-2 h-4 w-4 text-[#4f94d9]" />
+                          Ver
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-4 rounded-3xl border border-[#e8b6b6] bg-[#fbd0d0] p-4 shadow-inner">
+                      <div className="rounded-2xl border border-[#9fdcae] bg-[#c8f0cf] p-4">
+                        <div className="text-sm font-semibold uppercase tracking-wide text-slate-600">Descripcion</div>
+                        <p className="mt-2 text-slate-800 leading-relaxed whitespace-pre-wrap">{project.description}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {project.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="rounded-xl bg-[#bfe0ff] text-slate-800 border border-[#7bb8f2]"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-2">
+                        {project.github_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="justify-start gap-2 bg-white/80 border-[#bfa8ff]"
+                            asChild
+                          >
+                            <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
+                              <Github className="h-4 w-4 text-[#7b5cf2]" />
+                              Ver Codigo
+                            </Link>
+                          </Button>
+                        )}
+                        {project.demo_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="justify-start gap-2 bg-white/80 border-[#f3c27b]"
+                            asChild
+                          >
+                            <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 text-[#e59b26]" />
+                              Ver Demo
+                            </Link>
+                          </Button>
+                        )}
+                        {!project.github_url && !project.demo_url && (
+                          <p className="text-sm text-slate-600">No hay enlaces disponibles</p>
+                        )}
+
+                        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
                           <Calendar className="h-4 w-4" />
-                          <span>Actualizado: {formatDate(project.updated_at)}</span>
+                          <span>Creado: {formatDate(project.created_at)}</span>
+                          {project.updated_at !== project.created_at && (
+                            <>
+                              <span className="text-slate-400">-</span>
+                              <span>Actualizado: {formatDate(project.updated_at)}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {userRole === 'corporate' && onHire && (
+                        <div className="mt-auto flex justify-end">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="gap-2 rounded-2xl bg-[#7ed48d] px-5 text-slate-900 hover:bg-[#6bc77c]"
+                            onClick={handleHire}
+                          >
+                            <Briefcase className="h-4 w-4" />
+                            Contratar
+                          </Button>
                         </div>
                       )}
-                      <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4" />
-                        <span>{project.stars} estrellas</span>
-                      </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-foreground">Enlaces</h4>
-                    <div className="flex flex-col gap-2">
-                      {project.github_url && (
-                        <Button variant="outline" size="sm" className="justify-start gap-2" asChild>
-                          <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
-                            <Github className="h-4 w-4" />
-                            Ver Código
+                  <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#9fdcae] bg-[#c8f0cf] px-4 py-3 shadow-inner">
+                    <Avatar className="h-12 w-12 border border-[#7bb8f2]">
+                      <AvatarImage src={project.author_avatar || '/placeholder.svg'} alt={project.author} />
+                      <AvatarFallback>{project.author[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 flex flex-wrap items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="rounded-full bg-[#bfe0ff] text-slate-800 border border-[#7bb8f2] hover:bg-[#a8d4ff]"
+                        onClick={() => setShowCommentsSection(prev => !prev)}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Comentarios ({comments.length})
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="rounded-full border border-[#f3c27b] bg-[#ffe9c2] text-slate-800 hover:bg-[#ffdfa6]"
+                        asChild={Boolean(project.demo_url || project.github_url)}
+                        disabled={!project.demo_url && !project.github_url}
+                      >
+                        {project.demo_url || project.github_url ? (
+                          <Link
+                            href={project.demo_url || project.github_url || '#'} // fallback
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3"
+                          >
+                            <Eye className="h-4 w-4 text-[#d88a1a]" />
+                            Ver mas
                           </Link>
-                        </Button>
-                      )}
-                      {project.demo_url && (
-                        <Button variant="outline" size="sm" className="justify-start gap-2" asChild>
-                          <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                            Ver Demo
-                          </Link>
-                        </Button>
-                      )}
-                      
-                      {userRole === 'corporate' && onHire && (
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="justify-start gap-2 bg-green-600 hover:bg-green-700"
-                          onClick={handleHire}
-                        >
-                          <Briefcase className="h-4 w-4" />
-                          Contratar Estudiante
-                        </Button>
-                      )}
-                      
-                      {!project.github_url && !project.demo_url && userRole !== 'corporate' && (
-                        <p className="text-sm text-muted-foreground">No hay enlaces disponibles</p>
-                      )}
+                        ) : (
+                          <span className="flex items-center gap-2 px-3">
+                            <Eye className="h-4 w-4 text-[#d1b06a]" />
+                            Ver mas
+                          </span>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-foreground">Comentarios</h3>
-                <div className="space-y-3">
-                  {comments.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Sé el primero en comentar.</p>
-                  )}
-                  {comments.map((c) => (
-                    <div key={c.id} className="border border-border rounded-md p-3">
-                      <div className="text-sm text-foreground whitespace-pre-wrap">{c.content}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {c.author ? c.author : 'Anónimo'} • {formatDate(c.created_at)}
+              {showCommentsSection && (
+                <div className="rounded-2xl border border-[#9fdcae] bg-[#f8fff4] p-4 space-y-3 shadow-sm">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-[#4f94d9]" />
+                    Comentarios
+                  </h3>
+                  <div className="space-y-3">
+                    {comments.length === 0 && <p className="text-sm text-muted-foreground">Se el primero en comentar.</p>}
+                    {comments.map(c => (
+                      <div key={c.id} className="border border-border rounded-xl p-3 bg-white/80">
+                        <div className="text-sm text-foreground whitespace-pre-wrap">{c.content}</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {c.author ? c.author : 'Anonimo'} - {formatDate(c.created_at)}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    if (!project?.id || !newComment.trim()) return
-                    setIsSubmitting(true)
-                    try {
-                      const res = await fetch(`/api/projects/${project.id}/comments`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ content: newComment })
-                      })
-                      const data = await res.json()
-                      if (res.ok && data?.comment) {
-                        setComments((prev) => [...prev, data.comment])
-                        setNewComment("")
+                  <form
+                    onSubmit={async e => {
+                      e.preventDefault()
+                      if (!project?.id || !newComment.trim()) return
+                      setIsSubmitting(true)
+                      try {
+                        const res = await fetch(`/api/projects/${project.id}/comments`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ content: newComment }),
+                        })
+                        const data = await res.json()
+                        if (res.ok && data?.comment) {
+                          setComments(prev => [...prev, data.comment])
+                          setNewComment('')
+                        }
+                      } finally {
+                        setIsSubmitting(false)
                       }
-                    } finally {
-                      setIsSubmitting(false)
-                    }
-                  }}
-                  className="flex items-center gap-2"
-                >
-                  <Input
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Escribe un comentario..."
-                  />
-                  <Button type="submit" size="sm" disabled={isSubmitting || !newComment.trim()}>
-                    Enviar
-                  </Button>
-                </form>
-              </div>
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <Input
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      placeholder="Escribe un comentario..."
+                    />
+                    <Button type="submit" size="sm" disabled={isSubmitting || !newComment.trim()}>
+                      Enviar
+                    </Button>
+                  </form>
+                </div>
+              )}
             </CardContent>
           )}
 
@@ -310,7 +393,7 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
                     <Image
-                      src={project.image || "/placeholder.svg"}
+                      src={project.image || '/placeholder.svg'}
                       alt={project.title}
                       width={48}
                       height={48}
@@ -322,14 +405,9 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
                     <p className="text-sm text-muted-foreground">{project.author}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={handleLike}
-                    className="h-8 px-2 gap-1"
-                  >
+                  <Button size="sm" variant="ghost" onClick={handleLike} className="h-8 px-2 gap-1">
                     <Star className="h-4 w-4 fill-accent text-accent" />
                     {project.stars}
                   </Button>

@@ -38,7 +38,7 @@ export function Footer() {
             <h3 className="text-lg font-semibold text-foreground mb-2">Síguenos</h3>
             <div className="flex space-x-4">
               <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Twitter className="h-5 w-5" /></a>
-              <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Github className="h-5 w-5" /></a>
+              <a href="https://github.com/f4ntasma" target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Github className="h-5 w-5" /></a>
               <a href="#" target="_blank" rel="noopener noreferrer" className="hover:text-primary"><Linkedin className="h-5 w-5" /></a>
             </div>
           </div>

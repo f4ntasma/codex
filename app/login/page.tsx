@@ -22,9 +22,11 @@ import {
 } from 'lucide-react'
 import PillNav from '@/components/PillNav'
 import { supabase } from '@/lib/supabase-client'
+import HCaptcha from '@hcaptcha/react-hcaptcha'
 
 const logoSrc = '/symaicon.webp'
 const ROLE_STORAGE_KEY = 'syma-selected-role'
+const HCAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ''
 
 interface LoginFormData {
   email: string
@@ -65,6 +67,27 @@ function LoginPageContent() {
   const [sname, setSName] = useState('')
   const [semail, setSEmail] = useState('')
   const [spass, setSPass] = useState('')
+  const [loginCaptchaToken, setLoginCaptchaToken] = useState<string | null>(null)
+  const [signupCaptchaToken, setSignupCaptchaToken] = useState<string | null>(null)
+  const verifyCaptcha = useCallback(async (token: string | null) => {
+    if (!HCAPTCHA_SITE_KEY) {
+      throw new Error('Falta configurar la clave de HCaptcha')
+    }
+    if (!token) {
+      throw new Error('Completa el captcha para continuar')
+    }
+
+    const res = await fetch('/api/verify-captcha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token }),
+    })
+
+    const data = await res.json()
+    if (!res.ok || !data?.success) {
+      throw new Error(data?.error || 'Captcha inválido, intentalo nuevamente')
+    }
+  }, [])
 
   const activeHref = useMemo(
     () => (mode === 'signup' ? '/login?tab=signup' : '/login?tab=login'),
@@ -240,6 +263,7 @@ function LoginPageContent() {
     try {
       if (!formData.email || !formData.password) throw new Error('Por favor completa todos los campos')
       if (!chosenRole) throw new Error('Selecciona un rol')
+      await verifyCaptcha(loginCaptchaToken)
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email.trim(),
@@ -277,6 +301,7 @@ function LoginPageContent() {
         throw new Error('Usa un correo de Gmail para registrarte')
       }
       if (!chosenRole) throw new Error('Selecciona un rol')
+      await verifyCaptcha(signupCaptchaToken)
 
       const { error } = await supabase.auth.signUp({
         email: semail.trim(),
@@ -426,6 +451,19 @@ function LoginPageContent() {
                       </div>
                     )}
 
+                    <div className="flex justify-center">
+                      {HCAPTCHA_SITE_KEY ? (
+                        <HCaptcha
+                          sitekey={HCAPTCHA_SITE_KEY}
+                          onVerify={token => setLoginCaptchaToken(token)}
+                          onExpire={() => setLoginCaptchaToken(null)}
+                          onError={() => setLoginCaptchaToken(null)}
+                        />
+                      ) : (
+                        <p className="text-sm text-destructive">Configura NEXT_PUBLIC_HCAPTCHA_SITE_KEY</p>
+                      )}
+                    </div>
+
                     <div className="space-y-2">
                       <Button type="submit" className="w-full gap-2" disabled={loading}>
                         {loading ? (
@@ -499,6 +537,19 @@ function LoginPageContent() {
                         </div>
                       </div>
                     )}
+
+                    <div className="flex justify-center">
+                      {HCAPTCHA_SITE_KEY ? (
+                        <HCaptcha
+                          sitekey={HCAPTCHA_SITE_KEY}
+                          onVerify={token => setSignupCaptchaToken(token)}
+                          onExpire={() => setSignupCaptchaToken(null)}
+                          onError={() => setSignupCaptchaToken(null)}
+                        />
+                      ) : (
+                        <p className="text-sm text-destructive">Configura NEXT_PUBLIC_HCAPTCHA_SITE_KEY</p>
+                      )}
+                    </div>
 
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? (
