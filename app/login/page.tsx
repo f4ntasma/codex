@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import type { ReactNode } from 'react'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
@@ -442,7 +443,18 @@ function LoginPageContent() {
                         onClick={handleGoogleLogin}
                         disabled={loading}
                       >
-                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} Ingresar con Google
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Image
+                            src="/icongoogle.png"
+                            alt="Google"
+                            width={18}
+                            height={18}
+                            className="h-4 w-4 object-contain"
+                          />
+                        )}{' '}
+                        Ingresar con Google
                       </Button>
                     </div>
                   </form>
