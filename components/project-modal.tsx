@@ -107,7 +107,7 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
         }`}
       >
         <Card
-          className={`w-full max-w-5xl max-h-[90vh] border-border shadow-2xl transition-all duration-300 ${
+          className={`w-[95vw] max-w-6xl max-h-[90vh] border-border shadow-2xl transition-all duration-300 ${
             isMinimized ? 'h-auto' : 'h-full'
           } ${isAnimating ? 'animate-in zoom-in-95' : ''}`}
         >
@@ -163,180 +163,161 @@ export function ProjectModal({ project, isOpen, onClose, onLike, userRole, onHir
 
           {!isMinimized && (
             <CardContent className="p-6 overflow-y-auto max-h-[calc(90vh-80px)] space-y-6">
-              <div className="rounded-3xl border border-[#f0dca3] bg-[#fff7d6] p-4 shadow-sm">
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 rounded-2xl border border-[#7bb8f2] bg-[#bfe0ff] px-4 py-3 shadow-inner">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">Titulo</span>
-                      <span className="text-lg font-bold text-slate-900 line-clamp-1">{project.title}</span>
+              <div className="space-y-5 rounded-2xl border border-border/60 bg-card/70 p-5 shadow-sm">
+                <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Titulo</span>
+                    <span className="text-lg font-bold text-foreground line-clamp-1">{project.title}</span>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleLike}
+                      className="h-10 w-10 rounded-full border border-border/70"
+                    >
+                      <Star className="h-4 w-4 fill-primary text-primary" />
+                      <span className="sr-only">Like</span>
+                    </Button>
+                    <span className="text-sm font-semibold text-foreground">{project.stars}</span>
+                  </div>
+                </div>
+
+                <div className="grid gap-5 lg:grid-cols-[1.2fr,1fr] items-start">
+                  <div className="relative rounded-2xl border border-border/70 bg-muted shadow-sm min-h-[320px]">
+                    <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-xl">
+                      <Image
+                        src={project.image || '/placeholder.svg'}
+                        alt={project.title}
+                        fill
+                        className="object-cover"
+                        priority
+                      />
                     </div>
-                    <div className="ml-auto flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleLike}
-                        className="h-10 w-10 rounded-full bg-white/70 hover:bg-white border border-[#7bb8f2] shadow-sm"
-                      >
-                        <Star className="h-4 w-4 fill-[#7bb8f2] text-[#4f94d9]" />
-                        <span className="sr-only">Like</span>
-                      </Button>
-                      <span className="text-sm font-semibold text-slate-700">{project.stars}</span>
+                    <div className="absolute bottom-4 right-4 flex items-center gap-2">
+                      <div className="flex h-9 items-center rounded-full border border-border/70 bg-background/80 px-3 text-sm font-semibold text-foreground shadow-sm">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid gap-4 lg:grid-cols-[1.25fr,1fr]">
-                    <div className="relative rounded-3xl border border-[#7bb8f2] bg-[#bfe0ff] p-3 shadow-inner min-h-[320px]">
-                      <div className="relative h-[320px] md:h-[420px] overflow-hidden rounded-2xl border border-[#7bb8f2] bg-white">
-                        <Image
-                          src={project.image || '/placeholder.svg'}
-                          alt={project.title}
-                          fill
-                          className="object-cover"
-                          priority
-                        />
+                  <div className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
+                    <div>
+                      <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                        Descripcion
                       </div>
-                      <div className="absolute bottom-4 right-4 flex items-center gap-2">
-                        <div className="flex h-9 items-center rounded-full bg-white/80 px-3 text-sm font-semibold text-slate-700 border border-[#7bb8f2] shadow-sm">
-                          <Eye className="mr-2 h-4 w-4 text-[#4f94d9]" />
-                          Ver
-                        </div>
-                      </div>
+                      <p className="mt-2 text-foreground leading-relaxed whitespace-pre-wrap">{project.description}</p>
                     </div>
 
-                    <div className="flex flex-col gap-4 rounded-3xl border border-[#e8b6b6] bg-[#fbd0d0] p-4 shadow-inner">
-                      <div className="rounded-2xl border border-[#9fdcae] bg-[#c8f0cf] p-4">
-                        <div className="text-sm font-semibold uppercase tracking-wide text-slate-600">Descripcion</div>
-                        <p className="mt-2 text-slate-800 leading-relaxed whitespace-pre-wrap">{project.description}</p>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map(tag => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="rounded-xl bg-[#bfe0ff] text-slate-800 border border-[#7bb8f2]"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-2">
-                        {project.github_url && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="justify-start gap-2 bg-white/80 border-[#bfa8ff]"
-                            asChild
-                          >
-                            <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
-                              <Github className="h-4 w-4 text-[#7b5cf2]" />
-                              Ver Codigo
-                            </Link>
-                          </Button>
-                        )}
-                        {project.demo_url && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="justify-start gap-2 bg-white/80 border-[#f3c27b]"
-                            asChild
-                          >
-                            <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-4 w-4 text-[#e59b26]" />
-                              Ver Demo
-                            </Link>
-                          </Button>
-                        )}
-                        {!project.github_url && !project.demo_url && (
-                          <p className="text-sm text-slate-600">No hay enlaces disponibles</p>
-                        )}
-
-                        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-                          <Calendar className="h-4 w-4" />
-                          <span>Creado: {formatDate(project.created_at)}</span>
-                          {project.updated_at !== project.created_at && (
-                            <>
-                              <span className="text-slate-400">-</span>
-                              <span>Actualizado: {formatDate(project.updated_at)}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-
-                      {userRole === 'corporate' && onHire && (
-                        <div className="mt-auto flex justify-end">
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="gap-2 rounded-2xl bg-[#7ed48d] px-5 text-slate-900 hover:bg-[#6bc77c]"
-                            onClick={handleHire}
-                          >
-                            <Briefcase className="h-4 w-4" />
-                            Contratar
-                          </Button>
-                        </div>
-                      )}
+                    <div className="flex flex-wrap gap-2">
+                      {project.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="rounded-xl">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
-                  </div>
 
-                  <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#9fdcae] bg-[#c8f0cf] px-4 py-3 shadow-inner">
-                    <Avatar className="h-12 w-12 border border-[#7bb8f2]">
-                      <AvatarImage src={project.author_avatar || '/placeholder.svg'} alt={project.author} />
-                      <AvatarFallback>{project.author[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 flex flex-wrap items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="rounded-full bg-[#bfe0ff] text-slate-800 border border-[#7bb8f2] hover:bg-[#a8d4ff]"
-                        onClick={() => setShowCommentsSection(prev => !prev)}
-                      >
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Comentarios ({comments.length})
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="rounded-full border border-[#f3c27b] bg-[#ffe9c2] text-slate-800 hover:bg-[#ffdfa6]"
-                        asChild={Boolean(project.demo_url || project.github_url)}
-                        disabled={!project.demo_url && !project.github_url}
-                      >
-                        {project.demo_url || project.github_url ? (
-                          <Link
-                            href={project.demo_url || project.github_url || '#'} // fallback
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3"
-                          >
-                            <Eye className="h-4 w-4 text-[#d88a1a]" />
-                            Ver mas
+                    <div className="grid grid-cols-1 gap-2">
+                      {project.github_url && (
+                        <Button variant="outline" size="sm" className="justify-start gap-2" asChild>
+                          <Link href={project.github_url} target="_blank" rel="noopener noreferrer">
+                            <Github className="h-4 w-4" />
+                            Ver Codigo
                           </Link>
-                        ) : (
-                          <span className="flex items-center gap-2 px-3">
-                            <Eye className="h-4 w-4 text-[#d1b06a]" />
-                            Ver mas
-                          </span>
+                        </Button>
+                      )}
+                      {project.demo_url && (
+                        <Button variant="outline" size="sm" className="justify-start gap-2" asChild>
+                          <Link href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                            Ver Demo
+                          </Link>
+                        </Button>
+                      )}
+                      {!project.github_url && !project.demo_url && (
+                        <p className="text-sm text-muted-foreground">No hay enlaces disponibles</p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>Creado: {formatDate(project.created_at)}</span>
+                        {project.updated_at !== project.created_at && (
+                          <>
+                            <span>-</span>
+                            <span>Actualizado: {formatDate(project.updated_at)}</span>
+                          </>
                         )}
-                      </Button>
+                      </div>
                     </div>
+
+                    {userRole === 'corporate' && onHire && (
+                      <div className="mt-auto flex justify-end">
+                        <Button variant="default" size="sm" className="gap-2 rounded-xl" onClick={handleHire}>
+                          <Briefcase className="h-4 w-4" />
+                          Contratar
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+                  <Avatar className="h-12 w-12 border border-border/70">
+                    <AvatarImage src={project.author_avatar || '/placeholder.svg'} alt={project.author} />
+                    <AvatarFallback>{project.author[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      className="rounded-full"
+                      onClick={() => setShowCommentsSection(prev => !prev)}
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Comentarios ({comments.length})
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="rounded-full"
+                      asChild={Boolean(project.demo_url || project.github_url)}
+                      disabled={!project.demo_url && !project.github_url}
+                    >
+                      {project.demo_url || project.github_url ? (
+                        <Link
+                          href={project.demo_url || project.github_url || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Ver mas
+                        </Link>
+                      ) : (
+                        <span className="flex items-center gap-2 px-3">
+                          <Eye className="h-4 w-4" />
+                          Ver mas
+                        </span>
+                      )}
+                    </Button>
                   </div>
                 </div>
               </div>
 
               {showCommentsSection && (
-                <div className="rounded-2xl border border-[#9fdcae] bg-[#f8fff4] p-4 space-y-3 shadow-sm">
+                <div className="rounded-2xl border border-border/70 bg-card p-4 space-y-3 shadow-sm">
                   <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-[#4f94d9]" />
+                    <MessageSquare className="h-5 w-5" />
                     Comentarios
                   </h3>
                   <div className="space-y-3">
                     {comments.length === 0 && <p className="text-sm text-muted-foreground">Se el primero en comentar.</p>}
                     {comments.map(c => (
-                      <div key={c.id} className="border border-border rounded-xl p-3 bg-white/80">
+                      <div key={c.id} className="border border-border rounded-xl p-3 bg-background">
                         <div className="text-sm text-foreground whitespace-pre-wrap">{c.content}</div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {c.author ? c.author : 'Anonimo'} - {formatDate(c.created_at)}
