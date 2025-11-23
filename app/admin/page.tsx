@@ -1,6 +1,6 @@
 'use client'
 // Intentando deployear
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { AdminGuard } from "@/components/auth-guard"
 import { Header } from "@/components/header"
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,7 @@ import type { Project } from '@/lib/types'
 function AdminPanelContent() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
@@ -60,7 +61,14 @@ function AdminPanelContent() {
   })
 
   // Cargar proyectos
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async (opts?: { background?: boolean }) => {
+    const isBackground = opts?.background
+    if (isBackground) {
+      setIsRefreshing(true)
+    } else {
+      setLoading(true)
+    }
+
     try {
       const response = await fetch('/api/projects?status=all')
       
@@ -74,31 +82,33 @@ function AdminPanelContent() {
     } catch (error) {
       console.error('Error loading projects:', error)
     } finally {
-      setLoading(false)
+      if (isBackground) {
+        setIsRefreshing(false)
+      } else {
+        setLoading(false)
+      }
     }
-  }
+  }, [])
 
   // Cargar estadísticas del sistema
-  const loadStats = async () => {
-    try {
-      setStats({
-        totalProjects: projects.length,
-        totalViews: Math.floor(Math.random() * 1000) + 500,
-        totalUsers: Math.floor(Math.random() * 200) + 100,
-        pendingHires: Math.floor(Math.random() * 20) + 5
-      })
-    } catch (error) {
-      console.error('Error loading stats:', error)
-    }
-  }
+  const loadStats = useCallback(() => {
+    const totalViews = projects.reduce((sum, p) => sum + ((p as any).views || 0), 0)
+    setStats(prev => ({
+      ...prev,
+      totalProjects: projects.length,
+      totalViews,
+    }))
+  }, [projects])
 
   useEffect(() => {
     loadProjects()
-  }, [])
+    const intervalId = setInterval(() => loadProjects({ background: true }), 10000)
+    return () => clearInterval(intervalId)
+  }, [loadProjects])
 
   useEffect(() => {
     loadStats()
-  }, [projects.length])
+  }, [loadStats])
 
   // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
@@ -219,6 +229,9 @@ function AdminPanelContent() {
               <p className="text-muted-foreground">
                 Gestiona proyectos, usuarios y configuraciones del sistema
               </p>
+              {isRefreshing && (
+                <p className="text-xs text-muted-foreground mt-1">Actualizando datos...</p>
+              )}
             </div>
             
             <Button onClick={() => setShowCreateForm(true)} className="gap-2">

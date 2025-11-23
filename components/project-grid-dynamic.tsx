@@ -132,14 +132,18 @@ export function ProjectGridDynamic({ limit, showViewMore, initialProjects = [] }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialProjects.length])
 
-  // Dar like a un proyecto (ahora usando ruta pública)
+  // Dar like a un proyecto (limita a un like por navegador)
   const handleLike = useCallback(async (projectId: number) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`
+      }
+
       const response = await fetch(`/api/projects/${projectId}/like`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        headers
       })
 
       if (response.ok) {
