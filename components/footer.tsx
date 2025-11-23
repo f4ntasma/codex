@@ -21,13 +21,18 @@ export function Footer() {
             <h3 className="text-lg font-semibold text-foreground mb-2">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/politicas" className="hover:text-primary hover:underline">
+                <Link href="/privacidad" className="hover:text-primary hover:underline">
                   Políticas de Privacidad
                 </Link>
               </li>
               <li>
+                <Link href="/terminos" className="hover:text-primary hover:underline">
+                  Términos y Condiciones
+                </Link>
+              </li>
+              <li>
                 <Link href="/cookies" className="hover:text-primary hover:underline">
-                  Términos y Cookies
+                  Política de Cookies
                 </Link>
               </li>
             </ul>
